@@ -30,7 +30,7 @@ Every provider produces word-level timing and speaker labels in sync with the au
 | --- | --- | --- | --- | --- | --- |
 | `scribe` (default) | ElevenLabs Scribe v2 | 1 | $0.0037 | $0.22 | Cheapest, lowest WER |
 | `azure-fast` | Azure fast transcription | 1 | $0.006 | $0.36 | No ElevenLabs account needed |
-| `azure-hybrid` | MAI-1.5 text + fast timing | 2 | $0.012 | $0.72 | MAI's wording, for when it beats Scribe |
+| `azure-hybrid` | MAI-1.5 text + fast timing | 2 | $0.012 | $0.72 | Cleaner text than `azure-fast`, at 2× its cost |
 
 `scribe` is the default because it is both the cheapest of the three and the most
 accurate: it tops the independent
@@ -152,17 +152,22 @@ Azure accepts large uploads (500 MiB for `azure-fast`, 300 MiB for `azure-hybrid
   --output "video.srt"
 ```
 
-### Best transcript wording: `azure-hybrid`
+### Best wording Azure can give: `azure-hybrid`
 
-MAI-Transcribe-1.5 produces the most accurate text of any option here, but Azure
-returns only coarse timing for it and can't diarize it at all — on its own it
-collapses a whole recording into one enormous subtitle, which is why it isn't
-offered as a `--provider` choice.
+MAI-Transcribe-1.5 is Azure's LLM transcription mode, and it writes cleaner text
+than plain fast transcription does. But Azure returns only coarse timing for it
+and can't diarize it at all — on its own it collapses a whole recording into one
+enormous subtitle, which is why it isn't offered as a `--provider` choice.
 
 `azure-hybrid` makes it usable: it runs MAI for the text and Azure fast
 transcription for word-level timing *and speakers*, then merges them so each line
 appears as it's spoken and attributed to whoever said it. Same credentials, two
 transcription passes (about 2× the cost).
+
+This is the best transcript *Azure* offers, not the best transcript available:
+Scribe still scores lower on the WER leaderboard (2.2% against MAI's 2.4%) and
+costs a third as much. Reach for `azure-hybrid` when you're staying on Azure and
+`azure-fast`'s wording isn't good enough.
 
 ```sh
 ./subtitler \
