@@ -1,0 +1,46 @@
+#!/bin/sh
+# Keep CLAUDE.md and AGENTS.md byte-identical, in either direction. Both are
+# tracked and readable on GitHub; whichever one you edit is propagated to the
+# other on commit, so Claude Code and Codex read the same project instructions
+# and cannot drift. A commit that edits both with conflicting content is
+# rejected rather than silently picking a winner.
+#
+# Activate per clone with: git config core.hooksPath .githooks
+
+C=CLAUDE.md
+A=AGENTS.md
+
+# Nothing to do if neither file exists.
+[ -f "$C" ] || [ -f "$A" ] || exit 0
+
+# If one is missing, regenerate it from the other.
+if [ ! -f "$C" ]; then cp "$A" "$C"; git add "$C" "$A"; exit 0; fi
+if [ ! -f "$A" ]; then cp "$C" "$A"; git add "$C" "$A"; exit 0; fi
+
+# Already identical: just make sure both are staged.
+if cmp -s "$C" "$A"; then git add "$C" "$A"; exit 0; fi
+
+# They differ -- pick the sync direction from what changed since HEAD.
+c_changed=0
+a_changed=0
+if git rev-parse --verify -q HEAD >/dev/null; then
+  git diff --quiet HEAD -- "$C" || c_changed=1
+  git diff --quiet HEAD -- "$A" || a_changed=1
+else
+  c_changed=1 # no HEAD yet: treat CLAUDE.md as the source
+fi
+
+if [ "$c_changed" = 1 ] && [ "$a_changed" = 0 ]; then
+  cp "$C" "$A"
+elif [ "$a_changed" = 1 ] && [ "$c_changed" = 0 ]; then
+  cp "$A" "$C"
+else
+  echo "pre-commit: CLAUDE.md and AGENTS.md were both edited and now differ." >&2
+  echo "  They must stay identical. Reconcile them by making one match the other." >&2
+  echo "  Difference:" >&2
+  git --no-pager diff --no-index -- "$C" "$A" >&2 || true
+  exit 1
+fi
+
+git add "$C" "$A"
+exit 0
