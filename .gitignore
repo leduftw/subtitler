@@ -10,10 +10,8 @@ build/
 *.egg-info/
 
 # Local media and generated artifacts are intentionally not committed.
-/samples/*
-!/samples/.gitkeep
-/outputs/*
-!/outputs/.gitkeep
+/samples/
+/outputs/
 /.work/
 
 # Optional local environment files.

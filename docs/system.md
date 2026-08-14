@@ -159,10 +159,15 @@ The estimate is printed before upload.
 
 ## File Handling
 
-Local generated data is deliberately ignored by git:
+The repository ships no media and no output directory. Both the input path and
+the output path come from the caller; when `--output` is omitted, the run writes
+to `outputs/<input-stem>.<language-or-auto>.srt` under the current directory and
+creates that directory itself.
+
+Anything local is deliberately ignored by git:
 
 ```text
-samples/    local test media
+samples/    local test media, if you keep any
 outputs/    generated subtitles
 .work/      optional persistent temp audio
 ```
