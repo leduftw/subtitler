@@ -88,7 +88,7 @@ definition.enhancedMode.model = mai-transcribe-1.5
 audio = <extracted .mp3 audio>
 ```
 
-It produces the most accurate transcript text of any provider here, and it is **not offered as a `--provider` choice**. Two structural limits, neither tunable, make it unusable on its own:
+It produces cleaner transcript text than Azure's plain fast transcription (Scribe still edges it on WER — 2.2% against 2.4%), and it is **not offered as a `--provider` choice**. Two structural limits, neither tunable, make it unusable on its own:
 
 - MAI returns only coarse, segment-level timestamps (no word-level timing). A three-minute clip comes back as a single 3,000-character cue spanning the whole file.
 - Azure does not support diarization in enhanced mode, so MAI can never say who spoke.
