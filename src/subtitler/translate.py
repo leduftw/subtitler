@@ -40,7 +40,7 @@ _LINE = re.compile(r"^\s*(\d+)\s*\|(.*)$")
 _TURN = re.compile(r"^\s*\[([^\]]+)\]")
 
 _INSTRUCTIONS = """\
-# ai-subtitle worksheet {version}
+# subtitler worksheet {version}
 # source: {source}    target: {target}
 #
 # HOW TO TRANSLATE THIS FILE

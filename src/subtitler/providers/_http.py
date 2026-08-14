@@ -22,7 +22,7 @@ def build_multipart_body(
     ``fields`` are simple text form fields; ``file_field`` is the form field
     name under which ``file_path`` is uploaded.
     """
-    boundary = f"ai-subtitle-{os.urandom(12).hex()}"
+    boundary = f"subtitler-{os.urandom(12).hex()}"
     chunks: list[bytes] = []
 
     for name, value in fields:

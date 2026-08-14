@@ -1,6 +1,6 @@
 # System Design
 
-This tool is intentionally small. It does one job: turn a local media file into an SRT subtitle file.
+`subtitler` is intentionally small. It turns a local media file into an SRT subtitle file, and can then translate that file into another language. Both stages run over the same cue model, and nothing else is in scope.
 
 ## Pipeline
 
@@ -20,7 +20,7 @@ flowchart LR
     S --> G[Write .srt file]
 ```
 
-The CLI does not upload the original video. It extracts one compact audio file and uploads only that.
+`subtitler` does not upload the original video. It extracts one compact audio file and uploads only that.
 
 ## The cue is the contract
 
@@ -33,21 +33,21 @@ This matters for more than tidiness. Speaker labels are only useful if a cue nev
 ```mermaid
 sequenceDiagram
     participant User
-    participant CLI
+    participant Subtitler
     participant FFmpeg
     participant Provider
     participant Disk
 
-    User->>CLI: ai-subtitle input.mp4 --provider scribe --language en -o output.srt
-    CLI->>FFmpeg: ffprobe input duration
-    FFmpeg-->>CLI: seconds
-    CLI->>FFmpeg: extract first audio track
+    User->>Subtitler: subtitler input.mp4 --provider scribe --language en -o output.srt
+    Subtitler->>FFmpeg: ffprobe input duration
+    FFmpeg-->>Subtitler: seconds
+    Subtitler->>FFmpeg: extract first audio track
     FFmpeg-->>Disk: temp audio
-    CLI->>CLI: check upload size
-    CLI->>Provider: upload audio
-    Provider-->>CLI: timestamped JSON
-    CLI->>CLI: collect cues, group by speaker, render SRT
-    CLI->>Disk: output.srt
+    Subtitler->>Subtitler: check upload size
+    Subtitler->>Provider: upload audio
+    Provider-->>Subtitler: timestamped JSON
+    Subtitler->>Subtitler: collect cues, group by speaker, render SRT
+    Subtitler->>Disk: output.srt
 ```
 
 ## ElevenLabs Scribe Provider
@@ -95,7 +95,7 @@ It produces the most accurate transcript text of any provider here, and it is **
 
 So `azure_mai.py` survives purely as a building block: `azure_hybrid` calls its `build_definition` for the transcript pass and reuses its 43-language list and `request_language` fallback, and `cli.py` reads its spec for the `--azure-model` default. Its `SPEC` carries `internal=True`, which keeps it out of `providers.NAMES` — the tuple argparse uses for `--provider` choices — while leaving `providers.spec()` able to resolve it.
 
-MAI is in public preview and supports 43 languages. When a requested `--language` isn't on its list, the CLI omits the locale hint so Azure can auto-detect. Run `ai-subtitle --provider azure-hybrid --list-languages` to see the set.
+MAI is in public preview and supports 43 languages. When a requested `--language` isn't on its list, `subtitler` omits the locale hint so Azure can auto-detect. Run `subtitler --provider azure-hybrid --list-languages` to see the set.
 
 ## Diarization
 
@@ -155,7 +155,7 @@ Examples at `$0.006`/minute:
 120 minutes -> $0.72
 ```
 
-The CLI prints this estimate before upload.
+The estimate is printed before upload.
 
 ## File Handling
 
@@ -180,7 +180,7 @@ The important knobs for transcription accuracy are:
 If accuracy is poor, first try:
 
 ```sh
-./ai-subtitle input.mp4 --language en --audio-bitrate 96k --keep-audio --work-dir .work
+./subtitler input.mp4 --language en --audio-bitrate 96k --keep-audio --work-dir .work
 ```
 
 If the audio file exceeds the upload limit, reduce bitrate or implement chunking.
@@ -214,7 +214,7 @@ Whisper Large v3       4.1%
 
 ## Code Layout
 
-The CLI is a small package under `src/ai_subtitle_cli/`, split by responsibility:
+The code is a small package under `src/subtitler/`, split by responsibility:
 
 ```text
 cli.py        argument parsing and main() dispatch
@@ -240,4 +240,4 @@ can diarize, whether it's internal) and a `build(config)` factory, and implement
 `transcribe(audio_path, timeout) -> list[Cue]`. The pipeline stays
 provider-agnostic, so adding a provider is a new module under `providers/` plus an
 entry in the registry. Setting `internal=True` on a spec keeps a provider
-registered and reusable while hiding it from the CLI.
+registered and reusable while hiding it from the command line.

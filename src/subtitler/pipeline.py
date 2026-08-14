@@ -102,7 +102,7 @@ def audio_workspace(config: RunConfig) -> Iterator[Path]:
     elif config.keep_audio:
         work_root = Path.cwd() / ".work"
     else:
-        cleanup_dir = tempfile.TemporaryDirectory(prefix="ai-subtitle-")
+        cleanup_dir = tempfile.TemporaryDirectory(prefix="subtitler-")
         work_root = Path(cleanup_dir.name)
 
     work_root.mkdir(parents=True, exist_ok=True)
