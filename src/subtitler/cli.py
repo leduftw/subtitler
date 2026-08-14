@@ -74,11 +74,11 @@ def run_translation(args: argparse.Namespace) -> int:
 
 def parse_args(argv: Iterable[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        prog="ai-subtitle",
+        prog="subtitler",
         description="Generate an SRT subtitle file from a video/audio file.",
         epilog=(
             "Language hints use short codes such as en=English, de=German, es=Spanish. "
-            "Run `ai-subtitle --list-languages` for the provider-specific language/code list."
+            "Run `subtitler --list-languages` for the provider-specific language/code list."
         ),
     )
     parser.add_argument("input", nargs="?", help="Input video or audio file.")

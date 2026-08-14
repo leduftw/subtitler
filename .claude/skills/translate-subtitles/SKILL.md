@@ -44,7 +44,7 @@ Three steps. Steps 1 and 3 are commands; step 2 is you.
 ### 1. Emit the worksheet
 
 ```sh
-./ai-subtitle <source.srt> \
+./subtitler <source.srt> \
   --language <source-lang> \
   --target-language <target-lang> \
   --emit-worksheet <worksheet.txt>
@@ -73,7 +73,7 @@ only the numbered lines are read back.
 ### 3. Apply it
 
 ```sh
-./ai-subtitle <source.srt> \
+./subtitler <source.srt> \
   --apply-worksheet <translated.txt> \
   --target-language <target-lang> \
   -o <output.srt>
@@ -127,7 +127,7 @@ the timings survived:
 python3 - <<'PY'
 import sys; sys.path.insert(0, "src")
 from pathlib import Path
-from ai_subtitle_cli.srt import parse_srt
+from subtitler.srt import parse_srt
 a = parse_srt(Path("<source.srt>").read_text(encoding="utf-8"))
 b = parse_srt(Path("<output.srt>").read_text(encoding="utf-8"))
 print("cues:", len(a), "->", len(b))

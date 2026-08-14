@@ -1,8 +1,19 @@
-# ai-subtitle-cli
+# subtitler
 
-Small CLI for generating `.srt` subtitles from a video or audio file.
+Subtitles for any video, in any language.
 
-It uses local `ffmpeg` to extract a clean speech audio track, then sends that audio to a transcription provider and writes SRT output. No UI, no database, no background service.
+Point it at a video or audio file and it writes an `.srt`: who said what, when
+they said it, and — if you ask — translated into whatever language you need.
+
+It works two ways. Run it yourself as a command, or just ask a coding agent
+(Claude Code, Codex, or similar) to do it for you — *"make me English subtitles
+for this film"* is enough. The agent reads this README, runs the commands, and
+handles the translation stage itself. You don't have to know what an SRT is.
+
+Under the hood: local `ffmpeg` extracts a clean speech track, that audio (and only
+that audio — never the video) goes to a transcription provider, and the result is
+assembled into subtitles locally. No UI, no database, no background service, and
+no dependencies beyond the Python standard library.
 
 ## Requirements
 
@@ -63,10 +74,10 @@ no prefixes at all, so there's nothing to lose.
 
 ```sh
 # Turn it off:
-./ai-subtitle "samples/example.mp4" --provider azure-fast --no-diarize
+./subtitler "samples/example.mp4" --provider azure-fast --no-diarize
 
 # Raise or lower the speaker ceiling (2-35, default 8):
-./ai-subtitle "samples/example.mp4" --provider azure-fast --max-speakers 2
+./subtitler "samples/example.mp4" --provider azure-fast --max-speakers 2
 ```
 
 `--max-speakers 2` is worth setting for a two-person interview: a tighter bound
@@ -81,7 +92,7 @@ recording.
 ```sh
 export ELEVENLABS_API_KEY="..."
 
-./ai-subtitle \
+./subtitler \
   --provider scribe \
   "samples/example.mp4" \
   --language en \
@@ -91,14 +102,14 @@ export ELEVENLABS_API_KEY="..."
 Scribe can also tag non-speech sounds, which is useful for accessibility subtitles:
 
 ```sh
-./ai-subtitle --provider scribe "samples/example.mp4" --tag-audio-events
+./subtitler --provider scribe "samples/example.mp4" --tag-audio-events
 # ... produces cues like "(laughter)" and "(footsteps)"
 ```
 
 For a dry run that extracts audio but calls no API:
 
 ```sh
-./ai-subtitle \
+./subtitler \
   "samples/example.mp4" \
   --language en \
   --output "outputs/example.en.srt" \
@@ -124,7 +135,7 @@ az cognitiveservices account list \
 RESOURCE_GROUP="<your-resource-group>"
 SPEECH_RESOURCE="<your-resource-name>"
 
-# Read the endpoint and key the CLI expects into the environment.
+# Read the endpoint and key subtitler expects into the environment.
 export AZURE_SPEECH_ENDPOINT="$(az cognitiveservices account show \
   --name "$SPEECH_RESOURCE" --resource-group "$RESOURCE_GROUP" \
   --query "properties.endpoint" --output tsv)"
@@ -135,7 +146,7 @@ export AZURE_SPEECH_API_KEY="$(az cognitiveservices account keys list \
 # Sanity check (should print https://<resource>.cognitiveservices.azure.com/).
 echo "$AZURE_SPEECH_ENDPOINT"
 
-./ai-subtitle \
+./subtitler \
   --provider azure-fast \
   "samples/example.mp4" \
   --language en \
@@ -145,7 +156,7 @@ echo "$AZURE_SPEECH_ENDPOINT"
 Azure accepts large uploads (500 MiB for `azure-fast`, 300 MiB for `azure-hybrid`):
 
 ```sh
-./ai-subtitle \
+./subtitler \
   --provider azure-fast \
   "samples/example.mp4" \
   --audio-bitrate 48k \
@@ -165,7 +176,7 @@ appears as it's spoken and attributed to whoever said it. Same credentials, two
 transcription passes (about 2× the cost).
 
 ```sh
-./ai-subtitle \
+./subtitler \
   --provider azure-hybrid \
   "samples/example.mp4" \
   --language en \
@@ -181,21 +192,21 @@ auto-detects and often produces wrong-language or mistimed output.
 option:
 
 ```sh
-./ai-subtitle "samples/example.mp4" --language es --output "outputs/example.es.srt"
+./subtitler "samples/example.mp4" --language es --output "outputs/example.es.srt"
 ```
 
 `azure-fast` also covers many more locales than MAI, but wants a BCP-47 region
 code (`es-ES`, `en-US`); bare codes like `es` are mapped for you:
 
 ```sh
-./ai-subtitle \
+./subtitler \
   --provider azure-fast \
   "samples/example.mp4" \
   --language es-ES \
   --output "outputs/example.es.srt"
 ```
 
-Run `./ai-subtitle --provider <name> --list-languages` for a provider's set.
+Run `./subtitler --provider <name> --list-languages` for a provider's set.
 
 ## Translating subtitles
 
@@ -206,20 +217,20 @@ doesn't translate at all. So translation runs over cues that are already
 correctly timed, and only the text changes.
 
 Translating cue by cue produces nonsense, because a sentence usually spans
-several cues. Instead, the CLI writes a **worksheet** that groups cues into
+several cues. Instead, `subtitler` writes a **worksheet** that groups cues into
 speaker turns — so the translator reads whole sentences — while numbering every
 line so the result reassembles onto the original timings.
 
 ```sh
 # 1. Write the worksheet
-./ai-subtitle outputs/film.sr.srt \
-  --language sr --target-language en \
+./subtitler outputs/film.es.srt \
+  --language es --target-language en \
   --emit-worksheet work.txt
 
 # 2. Translate the numbered lines in work.txt (see below)
 
 # 3. Rebuild the subtitles on the original timings
-./ai-subtitle outputs/film.sr.srt \
+./subtitler outputs/film.es.srt \
   --apply-worksheet work.txt \
   --target-language en \
   -o outputs/film.en.srt
@@ -228,19 +239,25 @@ line so the result reassembles onto the original timings.
 Step 3 validates the numbering and refuses a worksheet that doesn't line up — a
 single missing line would shift every later subtitle onto the wrong timestamp.
 
-**There is no translation engine.** Step 2 is done by Claude, working through the
-worksheet directly; the `.claude/skills/translate-subtitles` skill carries the
-instructions for doing it well. That means translated files can't be regenerated
-by rerunning the tool — keep the worksheet if the translation was expensive to
-produce.
+**There is no translation engine, by design.** Step 2 is done by the agent
+itself, working through the worksheet directly — the
+`.claude/skills/translate-subtitles` skill carries the instructions for doing it
+well. Machine translation flattens the register of ordinary speech; an agent that
+can read the whole scene keeps the slang, the tone and the interruptions intact.
+
+The practical consequence: a translated file can't be regenerated by rerunning
+the tool. Keep the worksheet if the translation was expensive to produce.
+
+If you are driving this through an agent, you don't need to run any of the above
+by hand — ask for the language you want and it will do all three steps.
 
 ## Notes
 
 - Default audio extraction is mono speech audio at `16 kHz` and `48k`, MP3. Diarization requires mono, which is what the pipeline already extracts.
 - For very long files, lower `--audio-bitrate` to stay under the provider upload limit.
 - Use `--language` when you know it; it improves accuracy and reduces language-detection ambiguity.
-- Language hints use short codes. English is `en`, German is `de`, Spanish is `es`. Run `./ai-subtitle --list-languages` for the full supported language/code list.
-- `azure-hybrid` inherits MAI's 43-language list, which is shorter than Whisper's. If you pass a `--language` it doesn't list, the CLI drops the hint and lets Azure auto-detect; run `./ai-subtitle --provider azure-hybrid --list-languages` to see its set.
+- Language hints use short codes. English is `en`, German is `de`, Spanish is `es`. Run `./subtitler --list-languages` for the full supported language/code list.
+- `azure-hybrid` inherits MAI's 43-language list, which is shorter than Whisper's. If you pass a `--language` it doesn't list, `subtitler` drops the hint and lets Azure auto-detect; run `./subtitler --provider azure-hybrid --list-languages` to see its set.
 - OpenAI is deliberately not supported. `whisper-1` is legacy (removed 2027-01-20), its replacement `gpt-transcribe` returns no timestamps at all, and `gpt-4o-transcribe-diarize` returns only speaker-turn segments — measured on a 3-minute clip, 7 of its 91 segments ran over 6 seconds with no word timings to split them. None of the three can produce well-timed subtitles.
 
 ## Tests

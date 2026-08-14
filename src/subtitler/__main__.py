@@ -1,4 +1,4 @@
-from ai_subtitle_cli.cli import main
+from subtitler.cli import main
 
 
 if __name__ == "__main__":

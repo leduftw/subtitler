@@ -12,10 +12,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from ai_subtitle_cli.align import align_text_to_words  # noqa: E402
-from ai_subtitle_cli.providers import _azure_speech as az  # noqa: E402
-from ai_subtitle_cli.providers import elevenlabs_scribe as scribe  # noqa: E402
-from ai_subtitle_cli.srt import Cue, group_words_into_cues, render_srt  # noqa: E402
+from subtitler.align import align_text_to_words  # noqa: E402
+from subtitler.providers import _azure_speech as az  # noqa: E402
+from subtitler.providers import elevenlabs_scribe as scribe  # noqa: E402
+from subtitler.srt import Cue, group_words_into_cues, render_srt  # noqa: E402
 
 
 def words(*specs: tuple[int, int, str, int | None]) -> list[Cue]:
@@ -285,7 +285,7 @@ class ScribeResponseTest(unittest.TestCase):
 
 class ProviderRegistryTest(unittest.TestCase):
     def setUp(self) -> None:
-        from ai_subtitle_cli import providers
+        from subtitler import providers
 
         self.providers = providers
 
@@ -315,24 +315,24 @@ class ProviderRegistryTest(unittest.TestCase):
 
 class ResolveDiarizeTest(unittest.TestCase):
     def setUp(self) -> None:
-        from ai_subtitle_cli import providers
+        from subtitler import providers
 
         self.providers = providers
 
     def test_defaults_on_where_supported(self) -> None:
-        from ai_subtitle_cli.config import resolve_diarize
+        from subtitler.config import resolve_diarize
 
         self.assertTrue(resolve_diarize(None, self.providers.spec(self.providers.AZURE_FAST)))
         self.assertTrue(resolve_diarize(None, self.providers.spec(self.providers.AZURE_HYBRID)))
         self.assertTrue(resolve_diarize(None, self.providers.spec(self.providers.SCRIBE)))
 
     def test_defaults_off_where_unsupported(self) -> None:
-        from ai_subtitle_cli.config import resolve_diarize
+        from subtitler.config import resolve_diarize
 
         self.assertFalse(resolve_diarize(None, self.providers.spec(self.providers.AZURE_MAI)))
 
     def test_explicit_no_diarize_wins(self) -> None:
-        from ai_subtitle_cli.config import resolve_diarize
+        from subtitler.config import resolve_diarize
 
         self.assertFalse(resolve_diarize(False, self.providers.spec(self.providers.AZURE_FAST)))
 
