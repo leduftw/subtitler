@@ -26,25 +26,14 @@ no dependencies beyond the Python standard library.
 
 Every provider produces word-level timing and speaker labels in sync with the audio.
 
-| `--provider` | Model | Passes | Cost/min | Notes |
-| --- | --- | --- | --- | --- |
-| `scribe` (default) | ElevenLabs Scribe v2 | 1 | $0.0037 | Cheapest, lowest WER, best speaker separation |
-| `azure-fast` | Azure fast transcription | 1 | $0.006 | No ElevenLabs account needed |
-| `azure-hybrid` | MAI-1.5 text + fast timing | 2 | $0.012 | MAI's wording, for when it beats Scribe |
+| `--provider` | Model | Passes | Cost/min | Cost/hour | Notes |
+| --- | --- | --- | --- | --- | --- |
+| `scribe` (default) | ElevenLabs Scribe v2 | 1 | $0.0037 | $0.22 | Cheapest, lowest WER |
+| `azure-fast` | Azure fast transcription | 1 | $0.006 | $0.36 | No ElevenLabs account needed |
+| `azure-hybrid` | MAI-1.5 text + fast timing | 2 | $0.012 | $0.72 | MAI's wording, for when it beats Scribe |
 
-`scribe` is the default because it wins on every axis measured on a 3-minute
-dialogue clip — most words captured, more than double the speaker turns, the
-fewest cues blending two voices, and the lowest cost:
-
-| | azure-fast | azure-hybrid | scribe |
-| --- | --- | --- | --- |
-| cues | 78 | 53 | 83 |
-| speaker turns marked | 29 | 26 | **60** |
-| words captured | 531 | 570 | **580** |
-| cues merging two speakers | 3 | 3 | **1** |
-| cost (3 min) | $0.018 | $0.036 | **$0.011** |
-
-It also tops the independent
+`scribe` is the default because it is both the cheapest of the three and the most
+accurate: it tops the independent
 [Artificial Analysis leaderboard](https://artificialanalysis.ai/speech-to-text/non-streaming)
 at 2.2% WER, against MAI's 2.4%. Use the Azure providers when you have no
 ElevenLabs account, or for locales Scribe doesn't cover.
