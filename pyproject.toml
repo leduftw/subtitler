@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai-subtitle-cli"
+version = "0.1.0"
+description = "Simple CLI for generating SRT subtitles from video/audio files using OpenAI Whisper or Azure MAI."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+ai-subtitle = "ai_subtitle_cli.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

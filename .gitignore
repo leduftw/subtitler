@@ -1,0 +1,23 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+dist/
+build/
+*.egg-info/
+
+# Local media and generated artifacts are intentionally not committed.
+/samples/*
+!/samples/.gitkeep
+/outputs/*
+!/outputs/.gitkeep
+/.work/
+
+# Optional local environment files.
+.env
+*api*key*.txt
+*open*ai*key*.txt
+*azure*key*.txt
