@@ -74,10 +74,10 @@ no prefixes at all, so there's nothing to lose.
 
 ```sh
 # Turn it off:
-./subtitler "samples/example.mp4" --provider azure-fast --no-diarize
+./subtitler "video.mp4" --provider azure-fast --no-diarize
 
 # Raise or lower the speaker ceiling (2-35, default 8):
-./subtitler "samples/example.mp4" --provider azure-fast --max-speakers 2
+./subtitler "video.mp4" --provider azure-fast --max-speakers 2
 ```
 
 `--max-speakers 2` is worth setting for a two-person interview: a tighter bound
@@ -94,15 +94,15 @@ export ELEVENLABS_API_KEY="..."
 
 ./subtitler \
   --provider scribe \
-  "samples/example.mp4" \
+  "video.mp4" \
   --language en \
-  --output "outputs/example.en.srt"
+  --output "video.en.srt"
 ```
 
 Scribe can also tag non-speech sounds, which is useful for accessibility subtitles:
 
 ```sh
-./subtitler --provider scribe "samples/example.mp4" --tag-audio-events
+./subtitler --provider scribe "video.mp4" --tag-audio-events
 # ... produces cues like "(laughter)" and "(footsteps)"
 ```
 
@@ -110,9 +110,9 @@ For a dry run that extracts audio but calls no API:
 
 ```sh
 ./subtitler \
-  "samples/example.mp4" \
+  "video.mp4" \
   --language en \
-  --output "outputs/example.en.srt" \
+  --output "video.en.srt" \
   --dry-run
 ```
 
@@ -148,9 +148,9 @@ echo "$AZURE_SPEECH_ENDPOINT"
 
 ./subtitler \
   --provider azure-fast \
-  "samples/example.mp4" \
+  "video.mp4" \
   --language en \
-  --output "outputs/example.en.srt"
+  --output "video.en.srt"
 ```
 
 Azure accepts large uploads (500 MiB for `azure-fast`, 300 MiB for `azure-hybrid`):
@@ -158,9 +158,9 @@ Azure accepts large uploads (500 MiB for `azure-fast`, 300 MiB for `azure-hybrid
 ```sh
 ./subtitler \
   --provider azure-fast \
-  "samples/example.mp4" \
+  "video.mp4" \
   --audio-bitrate 48k \
-  --output "outputs/example.srt"
+  --output "video.srt"
 ```
 
 ### Best transcript wording: `azure-hybrid`
@@ -178,9 +178,9 @@ transcription passes (about 2× the cost).
 ```sh
 ./subtitler \
   --provider azure-hybrid \
-  "samples/example.mp4" \
+  "video.mp4" \
   --language en \
-  --output "outputs/example.en.srt"
+  --output "video.en.srt"
 ```
 
 ### Languages MAI doesn't cover
@@ -192,7 +192,7 @@ auto-detects and often produces wrong-language or mistimed output.
 option:
 
 ```sh
-./subtitler "samples/example.mp4" --language es --output "outputs/example.es.srt"
+./subtitler "video.mp4" --language es --output "video.es.srt"
 ```
 
 `azure-fast` also covers many more locales than MAI, but wants a BCP-47 region
@@ -201,9 +201,9 @@ code (`es-ES`, `en-US`); bare codes like `es` are mapped for you:
 ```sh
 ./subtitler \
   --provider azure-fast \
-  "samples/example.mp4" \
+  "video.mp4" \
   --language es-ES \
-  --output "outputs/example.es.srt"
+  --output "video.es.srt"
 ```
 
 Run `./subtitler --provider <name> --list-languages` for a provider's set.
@@ -223,17 +223,17 @@ line so the result reassembles onto the original timings.
 
 ```sh
 # 1. Write the worksheet
-./subtitler outputs/film.es.srt \
+./subtitler film.es.srt \
   --language es --target-language en \
   --emit-worksheet work.txt
 
 # 2. Translate the numbered lines in work.txt (see below)
 
 # 3. Rebuild the subtitles on the original timings
-./subtitler outputs/film.es.srt \
+./subtitler film.es.srt \
   --apply-worksheet work.txt \
   --target-language en \
-  -o outputs/film.en.srt
+  -o film.en.srt
 ```
 
 Step 3 validates the numbering and refuses a worksheet that doesn't line up — a
@@ -253,6 +253,7 @@ by hand — ask for the language you want and it will do all three steps.
 
 ## Notes
 
+- Pass `--output` to say where the `.srt` goes. Without it, the run writes to `outputs/<input-stem>.<language-or-auto>.srt` under the current directory, creating that directory if needed.
 - Default audio extraction is mono speech audio at `16 kHz` and `48k`, MP3. Diarization requires mono, which is what the pipeline already extracts.
 - For very long files, lower `--audio-bitrate` to stay under the provider upload limit.
 - Use `--language` when you know it; it improves accuracy and reduces language-detection ambiguity.
