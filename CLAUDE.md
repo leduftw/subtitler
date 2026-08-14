@@ -14,6 +14,9 @@ feature, a bug fix, a refactor, a docs update, a new test.
 - Never commit secrets or media. API key files, `samples/`, `outputs/`, and
   `.work/` are gitignored on purpose — keep it that way.
 - Don't commit generated `outputs/*.srt`; they are local artifacts.
+- Keep `AGENTS.md` and `CLAUDE.md` byte-identical. The tracked
+  `.githooks/pre-commit` hook enforces this when `core.hooksPath` is
+  `.githooks`.
 
 ## Testing
 
