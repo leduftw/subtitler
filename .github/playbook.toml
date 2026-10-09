@@ -1,0 +1,6 @@
+# Facts about subtitler for leduftw/playbook. Everything else comes from the playbook.
+name = "subtitler"
+published = false
+
+[[check]]
+stack = "python"

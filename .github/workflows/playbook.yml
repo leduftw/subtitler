@@ -1,0 +1,29 @@
+# Managed by leduftw/playbook v1. Change it there, not here:
+# https://github.com/leduftw/playbook
+name: playbook
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: playbook-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  playbook:
+    uses: leduftw/playbook/.github/workflows/pipeline.yml@v1
+    with:
+      playbook-ref: v1
+    # GitHub checks these against every job in the pipeline, including the ones
+    # only published repos run; each job then narrows them to what it needs.
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+      attestations: write
