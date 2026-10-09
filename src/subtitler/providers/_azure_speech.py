@@ -15,7 +15,7 @@ import urllib.request
 from pathlib import Path
 
 from ..errors import UserFacingError
-from ..srt import Cue, DEFAULT_WORD_DURATION_MS, group_words_into_cues
+from ..srt import DEFAULT_WORD_DURATION_MS, Cue, group_words_into_cues
 from ._http import build_multipart_body, extract_error_message
 
 TRANSCRIPTIONS_PATH = "/speechtotext/transcriptions:transcribe"
@@ -35,12 +35,18 @@ MAX_SPEAKERS = 35
 def validate_credentials(endpoint: str | None, api_key: str | None) -> None:
     """Raise :class:`UserFacingError` if the Azure endpoint or key is missing."""
     if not endpoint:
-        raise UserFacingError("AZURE_SPEECH_ENDPOINT is not set. Export it, or pass --azure-endpoint.")
+        raise UserFacingError(
+            "AZURE_SPEECH_ENDPOINT is not set. Export it, or pass --azure-endpoint."
+        )
     if not api_key:
-        raise UserFacingError("AZURE_SPEECH_API_KEY is not set. Export it, then rerun the same command.")
+        raise UserFacingError(
+            "AZURE_SPEECH_API_KEY is not set. Export it, then rerun the same command."
+        )
 
 
-def build_fast_definition(language: str | None, max_speakers: int | None = None) -> dict[str, object]:
+def build_fast_definition(
+    language: str | None, max_speakers: int | None = None
+) -> dict[str, object]:
     """Build the request ``definition`` for plain fast transcription (no MAI).
 
     Fast transcription returns word-level timestamps, which is what the hybrid
@@ -71,7 +77,11 @@ def post_transcribe(
     """POST one audio file to the transcribe endpoint and return the parsed JSON."""
     fields = [("definition", json.dumps(definition, ensure_ascii=False))]
     body, content_type = build_multipart_body(fields, "audio", audio_path)
-    url = (endpoint or "").rstrip("/") + TRANSCRIPTIONS_PATH + f"?api-version={API_VERSION}"
+    url = (
+        (endpoint or "").rstrip("/")
+        + TRANSCRIPTIONS_PATH
+        + f"?api-version={API_VERSION}"
+    )
     request = urllib.request.Request(
         url,
         data=body,
@@ -91,12 +101,16 @@ def post_transcribe(
             f"Azure Speech API returned HTTP {exc.code}: {extract_error_message(body_text)}"
         ) from exc
     except urllib.error.URLError as exc:
-        raise UserFacingError(f"could not reach Azure Speech API: {exc.reason}") from exc
+        raise UserFacingError(
+            f"could not reach Azure Speech API: {exc.reason}"
+        ) from exc
     except json.JSONDecodeError as exc:
         raise UserFacingError("Azure Speech API returned a non-JSON response") from exc
 
     if not isinstance(payload, dict):
-        raise UserFacingError("Azure Speech API returned an unexpected (non-object) response")
+        raise UserFacingError(
+            "Azure Speech API returned an unexpected (non-object) response"
+        )
     return payload
 
 
@@ -109,7 +123,9 @@ def transcription_to_cues(payload: dict[str, object]) -> list[Cue]:
     if not cues:
         combined = _first_combined_phrase_text(payload)
         if not combined:
-            raise UserFacingError("Azure Speech response did not include phrases or combined transcript text")
+            raise UserFacingError(
+                "Azure Speech response did not include phrases or combined transcript text"
+            )
         cues = [Cue(0, FALLBACK_PHRASE_DURATION_MS, combined)]
     return cues
 
@@ -152,13 +168,23 @@ def collect_cues(payload: dict[str, object]) -> list[Cue]:
         text = _phrase_text(phrase)
         if not text:
             continue
-        start_ms = _phrase_ms(phrase, "offsetMilliseconds", "offsetInTicks", "offset") or 0
-        duration_ms = _phrase_ms(phrase, "durationMilliseconds", "durationInTicks", "duration")
+        start_ms = (
+            _phrase_ms(phrase, "offsetMilliseconds", "offsetInTicks", "offset") or 0
+        )
+        duration_ms = _phrase_ms(
+            phrase, "durationMilliseconds", "durationInTicks", "duration"
+        )
         if duration_ms is None:
             next_start = None
             if index + 1 < len(phrases):
-                next_start = _phrase_ms(phrases[index + 1], "offsetMilliseconds", "offsetInTicks", "offset")
-            end_ms = next_start if next_start is not None and next_start > start_ms else start_ms + FALLBACK_PHRASE_DURATION_MS
+                next_start = _phrase_ms(
+                    phrases[index + 1], "offsetMilliseconds", "offsetInTicks", "offset"
+                )
+            end_ms = (
+                next_start
+                if next_start is not None and next_start > start_ms
+                else start_ms + FALLBACK_PHRASE_DURATION_MS
+            )
         else:
             end_ms = start_ms + duration_ms
         cues.append(Cue(start_ms, end_ms, text, _phrase_speaker(phrase)))
@@ -183,8 +209,12 @@ def _phrase_words(phrase: dict[str, object]) -> list[Cue]:
         start_ms = _phrase_ms(word, "offsetMilliseconds", "offsetInTicks", "offset")
         if start_ms is None:
             continue
-        duration_ms = _phrase_ms(word, "durationMilliseconds", "durationInTicks", "duration")
-        end_ms = start_ms + (duration_ms if duration_ms is not None else DEFAULT_WORD_DURATION_MS)
+        duration_ms = _phrase_ms(
+            word, "durationMilliseconds", "durationInTicks", "duration"
+        )
+        end_ms = start_ms + (
+            duration_ms if duration_ms is not None else DEFAULT_WORD_DURATION_MS
+        )
         words.append(Cue(start_ms, end_ms, text, speaker))
 
     return words
@@ -215,9 +245,16 @@ def _collect_phrases(payload: dict[str, object]) -> list[dict[str, object]]:
                 continue
             channel_phrases = channel.get("phrases")
             if isinstance(channel_phrases, list):
-                phrases.extend(item for item in channel_phrases if isinstance(item, dict))
+                phrases.extend(
+                    item for item in channel_phrases if isinstance(item, dict)
+                )
 
-    return sorted(phrases, key=lambda phrase: _phrase_ms(phrase, "offsetMilliseconds", "offsetInTicks", "offset") or 0)
+    return sorted(
+        phrases,
+        key=lambda phrase: (
+            _phrase_ms(phrase, "offsetMilliseconds", "offsetInTicks", "offset") or 0
+        ),
+    )
 
 
 def _first_combined_phrase_text(payload: dict[str, object]) -> str | None:
@@ -239,7 +276,9 @@ def _phrase_text(phrase: dict[str, object]) -> str | None:
     return None
 
 
-def _phrase_ms(phrase: dict[str, object], milliseconds_key: str, ticks_key: str, fallback_key: str) -> int | None:
+def _phrase_ms(
+    phrase: dict[str, object], milliseconds_key: str, ticks_key: str, fallback_key: str
+) -> int | None:
     value = phrase.get(milliseconds_key)
     if isinstance(value, int | float):
         return int(value)

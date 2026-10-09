@@ -64,8 +64,12 @@ class AzureHybridProvider(TranscriptionProvider):
 
     def transcribe(self, audio_path: Path, timeout_seconds: int) -> list[Cue]:
         # 1. MAI: the accurate transcript (the "what").
-        mai_definition = azure_mai.build_definition(self.model, self.language, self.transcribe_style)
-        mai_payload = az.post_transcribe(self.endpoint, self.api_key, mai_definition, audio_path, timeout_seconds)
+        mai_definition = azure_mai.build_definition(
+            self.model, self.language, self.transcribe_style
+        )
+        mai_payload = az.post_transcribe(
+            self.endpoint, self.api_key, mai_definition, audio_path, timeout_seconds
+        )
         transcript = az.combined_text(mai_payload)
         if not transcript:
             raise UserFacingError("Azure MAI returned no transcript text to align.")
@@ -76,7 +80,9 @@ class AzureHybridProvider(TranscriptionProvider):
         # transcript is only a timing skeleton (MAI supplies the words), so we let it
         # auto-detect the language to stay robust across inputs.
         fast_definition = az.build_fast_definition(None, self.max_speakers)
-        fast_payload = az.post_transcribe(self.endpoint, self.api_key, fast_definition, audio_path, timeout_seconds)
+        fast_payload = az.post_transcribe(
+            self.endpoint, self.api_key, fast_definition, audio_path, timeout_seconds
+        )
         timed_words = az.collect_words(fast_payload)
         if not timed_words:
             raise UserFacingError(
@@ -88,7 +94,9 @@ class AzureHybridProvider(TranscriptionProvider):
         word_cues = align_text_to_words(transcript, timed_words)
         cues = group_words_into_cues(word_cues) or word_cues
         if not cues:
-            raise UserFacingError("Aligning the MAI transcript to word timings produced no cues.")
+            raise UserFacingError(
+                "Aligning the MAI transcript to word timings produced no cues."
+            )
         return cues
 
 

@@ -21,7 +21,10 @@ from .base import ProviderSpec, TranscriptionProvider
 if TYPE_CHECKING:
     from ..config import RunConfig
 
-_MODULES = {module.SPEC.name: module for module in (elevenlabs_scribe, azure_fast, azure_hybrid, azure_mai)}
+_MODULES = {
+    module.SPEC.name: module
+    for module in (elevenlabs_scribe, azure_fast, azure_hybrid, azure_mai)
+}
 _SPECS = {name: module.SPEC for name, module in _MODULES.items()}
 
 # Provider name constants and the user-selectable set, in display order.
@@ -29,21 +32,23 @@ AZURE_MAI = azure_mai.SPEC.name
 AZURE_FAST = azure_fast.SPEC.name
 AZURE_HYBRID = azure_hybrid.SPEC.name
 SCRIBE = elevenlabs_scribe.SPEC.name
-NAMES: tuple[str, ...] = tuple(name for name, provider_spec in _SPECS.items() if not provider_spec.internal)
+NAMES: tuple[str, ...] = tuple(
+    name for name, provider_spec in _SPECS.items() if not provider_spec.internal
+)
 DEFAULT = SCRIBE
 
 __all__ = [
-    "ProviderSpec",
-    "TranscriptionProvider",
-    "SCRIBE",
-    "AZURE_MAI",
     "AZURE_FAST",
     "AZURE_HYBRID",
-    "NAMES",
+    "AZURE_MAI",
     "DEFAULT",
-    "spec",
+    "NAMES",
+    "SCRIBE",
+    "ProviderSpec",
+    "TranscriptionProvider",
     "build",
     "print_supported_languages",
+    "spec",
 ]
 
 

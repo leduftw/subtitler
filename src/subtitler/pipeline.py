@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import tempfile
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Iterator
 
 from . import providers
 from .config import RunConfig
@@ -59,7 +59,9 @@ def run(config: RunConfig) -> int:
         cues = provider.transcribe(audio_path, config.api_timeout_seconds)
         srt_text = render_srt(cues)
         if not srt_text:
-            raise UserFacingError(f"{provider.spec.label} returned no subtitle text for this audio.")
+            raise UserFacingError(
+                f"{provider.spec.label} returned no subtitle text for this audio."
+            )
 
         config.output_path.parent.mkdir(parents=True, exist_ok=True)
         config.output_path.write_text(normalize_srt_text(srt_text), encoding="utf-8")
@@ -78,7 +80,9 @@ def _print_result(cues: list[Cue], config: RunConfig) -> None:
     print(f"Wrote SRT: {config.output_path} ({detail})")
 
 
-def _print_cost_estimate(config: RunConfig, provider: providers.TranscriptionProvider) -> None:
+def _print_cost_estimate(
+    config: RunConfig, provider: providers.TranscriptionProvider
+) -> None:
     duration_seconds = probe_duration_seconds(config.input_path)
     if duration_seconds is None:
         return
