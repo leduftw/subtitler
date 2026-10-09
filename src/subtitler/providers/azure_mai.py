@@ -87,7 +87,9 @@ SPEC = ProviderSpec(
 )
 
 
-def build_definition(model: str, language: str | None, transcribe_style: str) -> dict[str, object]:
+def build_definition(
+    model: str, language: str | None, transcribe_style: str
+) -> dict[str, object]:
     """Build the MAI ``enhancedMode`` request ``definition``."""
     enhanced_mode: dict[str, object] = {
         "enabled": True,
@@ -126,7 +128,9 @@ class AzureMaiProvider(TranscriptionProvider):
 
     def transcribe(self, audio_path: Path, timeout_seconds: int) -> list[Cue]:
         definition = build_definition(self.model, self.language, self.transcribe_style)
-        payload = az.post_transcribe(self.endpoint, self.api_key, definition, audio_path, timeout_seconds)
+        payload = az.post_transcribe(
+            self.endpoint, self.api_key, definition, audio_path, timeout_seconds
+        )
         return az.transcription_to_cues(payload)
 
 

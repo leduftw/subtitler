@@ -26,22 +26,22 @@ def build_multipart_body(
     chunks: list[bytes] = []
 
     for name, value in fields:
-        chunks.append(f"--{boundary}\r\n".encode("utf-8"))
-        chunks.append(f'Content-Disposition: form-data; name="{name}"\r\n\r\n'.encode("utf-8"))
+        chunks.append(f"--{boundary}\r\n".encode())
+        chunks.append(f'Content-Disposition: form-data; name="{name}"\r\n\r\n'.encode())
         chunks.append(value.encode("utf-8"))
         chunks.append(b"\r\n")
 
     content_type = mimetypes.guess_type(file_path.name)[0] or "application/octet-stream"
-    chunks.append(f"--{boundary}\r\n".encode("utf-8"))
+    chunks.append(f"--{boundary}\r\n".encode())
     chunks.append(
         (
             f'Content-Disposition: form-data; name="{file_field}"; filename="{file_path.name}"\r\n'
             f"Content-Type: {content_type}\r\n\r\n"
-        ).encode("utf-8")
+        ).encode()
     )
     chunks.append(file_path.read_bytes())
     chunks.append(b"\r\n")
-    chunks.append(f"--{boundary}--\r\n".encode("utf-8"))
+    chunks.append(f"--{boundary}--\r\n".encode())
 
     return b"".join(chunks), f"multipart/form-data; boundary={boundary}"
 

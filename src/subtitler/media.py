@@ -26,7 +26,9 @@ def ensure_input(path: Path) -> None:
 def ensure_output(path: Path, *, force: bool, dry_run: bool) -> None:
     """Raise if the output already exists and would be overwritten."""
     if path.exists() and not force and not dry_run:
-        raise UserFacingError(f"output already exists: {path} (use --force to overwrite)")
+        raise UserFacingError(
+            f"output already exists: {path} (use --force to overwrite)"
+        )
 
 
 def probe_duration_seconds(path: Path) -> float | None:

@@ -66,7 +66,11 @@ def align_text_to_words(transcript: str, timed_words: list[Cue]) -> list[Cue]:
     _interpolate_gaps(spans, timed_words)
     _enforce_monotonic(spans)
 
-    return [Cue(span[0], span[1], raw_tokens[i], span[2]) for i, span in enumerate(spans) if span is not None]
+    return [
+        Cue(span[0], span[1], raw_tokens[i], span[2])
+        for i, span in enumerate(spans)
+        if span is not None
+    ]
 
 
 def _normalize(token: str) -> str:
@@ -129,7 +133,11 @@ def _interpolate_gaps(spans: list[_Span | None], timed_words: list[Cue]) -> None
         left = before[1] if before is not None else audio_start
         right = after[0] if after is not None else audio_end
         right = max(right, left)
-        speaker = before[2] if before is not None else (after[2] if after is not None else None)
+        speaker = (
+            before[2]
+            if before is not None
+            else (after[2] if after is not None else None)
+        )
 
         count = run_end - index
         step = (right - left) / count
