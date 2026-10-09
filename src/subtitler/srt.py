@@ -57,7 +57,9 @@ def format_srt_timestamp(milliseconds: int) -> str:
 
 def wrap_subtitle_text(text: str) -> list[str]:
     """Wrap cue text to ``WRAP_WIDTH`` columns, never returning an empty list."""
-    return textwrap.wrap(text, width=WRAP_WIDTH, break_long_words=False, break_on_hyphens=False) or [text]
+    return textwrap.wrap(
+        text, width=WRAP_WIDTH, break_long_words=False, break_on_hyphens=False
+    ) or [text]
 
 
 def normalize_srt_text(text: str) -> str:
@@ -147,7 +149,9 @@ def parse_srt(text: str) -> list[Cue]:
 
 
 def _match_ms(match: re.Match[str], group_offset: int) -> int:
-    hours, minutes, seconds, fraction = (match.group(group_offset + i) for i in range(1, 5))
+    hours, minutes, seconds, fraction = (
+        match.group(group_offset + i) for i in range(1, 5)
+    )
     return (
         int(hours) * 3_600_000
         + int(minutes) * 60_000

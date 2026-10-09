@@ -92,7 +92,9 @@ class AzureFastProvider(TranscriptionProvider):
 
     def transcribe(self, audio_path: Path, timeout_seconds: int) -> list[Cue]:
         definition = az.build_fast_definition(self.locale, self.max_speakers)
-        payload = az.post_transcribe(self.endpoint, self.api_key, definition, audio_path, timeout_seconds)
+        payload = az.post_transcribe(
+            self.endpoint, self.api_key, definition, audio_path, timeout_seconds
+        )
         return az.transcription_to_cues(payload)
 
 
@@ -113,7 +115,10 @@ def resolve_locale(language: str | None) -> str | None:
         return language  # already region-qualified, e.g. es-ES / en-US
     mapped = _SHORT_TO_LOCALE.get(language.lower())
     if mapped:
-        print(f"note: mapping --language {language} to {mapped} for fast transcription.", file=sys.stderr)
+        print(
+            f"note: mapping --language {language} to {mapped} for fast transcription.",
+            file=sys.stderr,
+        )
         return mapped
     print(
         f"warning: fast transcription expects a region code (e.g. en-US, es-ES); "

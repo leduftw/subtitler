@@ -22,8 +22,8 @@ from typing import TYPE_CHECKING
 
 from ..errors import UserFacingError
 from ..srt import Cue, group_words_into_cues
-from .base import ProviderSpec, TranscriptionProvider
 from ._http import build_multipart_body, extract_error_message
+from .base import ProviderSpec, TranscriptionProvider
 
 if TYPE_CHECKING:
     from ..config import RunConfig
@@ -103,7 +103,9 @@ class ElevenLabsScribeProvider(TranscriptionProvider):
 
     def validate(self) -> None:
         if not self.api_key:
-            raise UserFacingError("ELEVENLABS_API_KEY is not set. Export it, then rerun the same command.")
+            raise UserFacingError(
+                "ELEVENLABS_API_KEY is not set. Export it, then rerun the same command."
+            )
 
     def transcribe(self, audio_path: Path, timeout_seconds: int) -> list[Cue]:
         payload = self._post(audio_path, timeout_seconds)
@@ -124,7 +126,9 @@ class ElevenLabsScribeProvider(TranscriptionProvider):
             ("diarize", "true" if self.max_speakers is not None else "false"),
         ]
         if self.max_speakers is not None:
-            fields.append(("num_speakers", str(min(MAX_SPEAKERS, max(1, self.max_speakers)))))
+            fields.append(
+                ("num_speakers", str(min(MAX_SPEAKERS, max(1, self.max_speakers))))
+            )
         if self.language:
             fields.append(("language_code", self.language))
 
@@ -145,12 +149,18 @@ class ElevenLabsScribeProvider(TranscriptionProvider):
                 f"ElevenLabs API returned HTTP {exc.code}: {extract_error_message(body_text)}"
             ) from exc
         except urllib.error.URLError as exc:
-            raise UserFacingError(f"could not reach ElevenLabs API: {exc.reason}") from exc
+            raise UserFacingError(
+                f"could not reach ElevenLabs API: {exc.reason}"
+            ) from exc
         except json.JSONDecodeError as exc:
-            raise UserFacingError("ElevenLabs API returned a non-JSON response") from exc
+            raise UserFacingError(
+                "ElevenLabs API returned a non-JSON response"
+            ) from exc
 
         if not isinstance(payload, dict):
-            raise UserFacingError("ElevenLabs API returned an unexpected (non-object) response")
+            raise UserFacingError(
+                "ElevenLabs API returned an unexpected (non-object) response"
+            )
         return payload
 
 
@@ -179,7 +189,14 @@ def collect_words(payload: dict[str, object]) -> list[Cue]:
         end = _seconds_to_ms(token.get("end"))
         if start is None:
             continue
-        words.append(Cue(start, end if end is not None and end > start else start, text.strip(), speakers.number(token)))
+        words.append(
+            Cue(
+                start,
+                end if end is not None and end > start else start,
+                text.strip(),
+                speakers.number(token),
+            )
+        )
 
     return sorted(words, key=lambda word: word.start_ms)
 
@@ -209,7 +226,7 @@ class _SpeakerNumbering:
 def _seconds_to_ms(value: object) -> int | None:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return None
-    return int(round(value * 1000))
+    return round(value * 1000)
 
 
 def build(config: RunConfig) -> ElevenLabsScribeProvider:

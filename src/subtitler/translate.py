@@ -107,9 +107,15 @@ def emit_worksheet(cues: list[Cue], source_language: str, target_language: str) 
     if not cues:
         raise UserFacingError("there are no cues to translate.")
 
-    parts = [_INSTRUCTIONS.format(version=WORKSHEET_VERSION, source=source_language, target=target_language)]
+    parts = [
+        _INSTRUCTIONS.format(
+            version=WORKSHEET_VERSION, source=source_language, target=target_language
+        )
+    ]
     for position, turn in enumerate(group_into_turns(cues)):
-        parts.append(f"\n[{speaker_label(turn, position)}] {format_srt_timestamp(turn.cues[0].start_ms)}")
+        parts.append(
+            f"\n[{speaker_label(turn, position)}] {format_srt_timestamp(turn.cues[0].start_ms)}"
+        )
         for number, cue in zip(turn.numbers, turn.cues):
             parts.append(f"{number}| " + " ".join(cue.text.split()))
     return "\n".join(parts) + "\n"
@@ -182,8 +188,12 @@ def emit_worksheet_file(
     worksheet_path.parent.mkdir(parents=True, exist_ok=True)
     worksheet_path.write_text(worksheet, encoding="utf-8")
     turns = len(group_into_turns(cues))
-    print(f"Wrote worksheet: {worksheet_path} ({len(cues)} lines in {turns} speaker turns)")
-    print(f"Translate the numbered lines into {target_language}, then rerun with --apply-worksheet.")
+    print(
+        f"Wrote worksheet: {worksheet_path} ({len(cues)} lines in {turns} speaker turns)"
+    )
+    print(
+        f"Translate the numbered lines into {target_language}, then rerun with --apply-worksheet."
+    )
     return 0
 
 
@@ -195,7 +205,9 @@ def apply_worksheet_file(
 ) -> int:
     """Rebuild a translated SRT from a worksheet. Returns an exit code."""
     if output_path.exists() and not force:
-        raise UserFacingError(f"{output_path} already exists. Pass --force to overwrite.")
+        raise UserFacingError(
+            f"{output_path} already exists. Pass --force to overwrite."
+        )
     if not worksheet_path.is_file():
         raise UserFacingError(f"worksheet not found: {worksheet_path}")
 

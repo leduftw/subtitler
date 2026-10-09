@@ -6,16 +6,18 @@ project's zero-dependency policy.
 
 from __future__ import annotations
 
+import itertools
 import sys
 import unittest
 from pathlib import Path
+from typing import ClassVar
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from subtitler.align import align_text_to_words  # noqa: E402
-from subtitler.providers import _azure_speech as az  # noqa: E402
-from subtitler.providers import elevenlabs_scribe as scribe  # noqa: E402
-from subtitler.srt import Cue, group_words_into_cues, render_srt  # noqa: E402
+from subtitler.align import align_text_to_words
+from subtitler.providers import _azure_speech as az
+from subtitler.providers import elevenlabs_scribe as scribe
+from subtitler.srt import Cue, group_words_into_cues, render_srt
 
 
 def words(*specs: tuple[int, int, str, int | None]) -> list[Cue]:
@@ -46,8 +48,12 @@ class RenderSrtTest(unittest.TestCase):
         self.assertIn("- Back to the first.", srt)
 
     def test_numbers_cues_sequentially(self) -> None:
-        srt = render_srt([Cue(0, 1000, "a"), Cue(1000, 2000, "b"), Cue(2000, 3000, "c")])
-        self.assertEqual([line for line in srt.splitlines() if line.isdigit()], ["1", "2", "3"])
+        srt = render_srt(
+            [Cue(0, 1000, "a"), Cue(1000, 2000, "b"), Cue(2000, 3000, "c")]
+        )
+        self.assertEqual(
+            [line for line in srt.splitlines() if line.isdigit()], ["1", "2", "3"]
+        )
 
     def test_empty_input_renders_empty(self) -> None:
         self.assertEqual(render_srt([]), "")
@@ -67,7 +73,9 @@ class GroupWordsTest(unittest.TestCase):
                 (8400, 8700, "apologize.", 1),
             )
         )
-        self.assertEqual([cue.text for cue in cues], ["Sorry, I", "You don't need to apologize."])
+        self.assertEqual(
+            [cue.text for cue in cues], ["Sorry, I", "You don't need to apologize."]
+        )
         self.assertEqual([cue.speaker for cue in cues], [0, 1])
 
     def test_still_splits_on_a_long_pause_within_one_speaker(self) -> None:
@@ -77,7 +85,9 @@ class GroupWordsTest(unittest.TestCase):
         self.assertEqual([cue.text for cue in cues], ["one two", "later"])
 
     def test_keeps_one_speaker_together(self) -> None:
-        cues = group_words_into_cues(words((0, 200, "all", 0), (200, 400, "one", 0), (400, 600, "cue", 0)))
+        cues = group_words_into_cues(
+            words((0, 200, "all", 0), (200, 400, "one", 0), (400, 600, "cue", 0))
+        )
         self.assertEqual([cue.text for cue in cues], ["all one cue"])
 
     def test_fewer_than_two_words_signals_fallback(self) -> None:
@@ -97,7 +107,10 @@ class AlignTest(unittest.TestCase):
         )
         aligned = align_text_to_words("Sorry, I— You don't need to apologize.", timed)
 
-        self.assertEqual([cue.text for cue in aligned], ["Sorry,", "I—", "You", "don't", "need", "to", "apologize."])
+        self.assertEqual(
+            [cue.text for cue in aligned],
+            ["Sorry,", "I—", "You", "don't", "need", "to", "apologize."],
+        )
         self.assertEqual([cue.speaker for cue in aligned], [0, 0, 1, 1, 1, 1, 1])
         self.assertEqual(aligned[0].start_ms, 7120)
         self.assertEqual(aligned[-1].end_ms, 8700)
@@ -107,13 +120,15 @@ class AlignTest(unittest.TestCase):
         aligned = align_text_to_words("hello there goodbye", timed)
         speakers = {cue.text: cue.speaker for cue in aligned}
         self.assertEqual(speakers["hello"], 0)
-        self.assertEqual(speakers["there"], 0)  # interpolated, attributed to the speaker it follows
+        self.assertEqual(
+            speakers["there"], 0
+        )  # interpolated, attributed to the speaker it follows
         self.assertEqual(speakers["goodbye"], 1)
 
     def test_cues_never_overlap(self) -> None:
         timed = words((0, 900, "a", 0), (500, 1200, "b", 1), (1100, 1500, "c", 1))
         aligned = align_text_to_words("a b c", timed)
-        for earlier, later in zip(aligned, aligned[1:]):
+        for earlier, later in itertools.pairwise(aligned):
             self.assertLessEqual(earlier.end_ms, later.start_ms)
 
     def test_empty_inputs_yield_no_cues(self) -> None:
@@ -123,7 +138,9 @@ class AlignTest(unittest.TestCase):
 
 class AzureDefinitionTest(unittest.TestCase):
     def test_omits_diarization_when_not_requested(self) -> None:
-        self.assertEqual(az.build_fast_definition("en-US", None), {"locales": ["en-US"]})
+        self.assertEqual(
+            az.build_fast_definition("en-US", None), {"locales": ["en-US"]}
+        )
 
     def test_enables_diarization_with_max_speakers(self) -> None:
         self.assertEqual(
@@ -132,15 +149,23 @@ class AzureDefinitionTest(unittest.TestCase):
         )
 
     def test_clamps_max_speakers_to_the_range_azure_accepts(self) -> None:
-        self.assertEqual(az.build_fast_definition(None, 1)["diarization"], {"enabled": True, "maxSpeakers": 2})
-        self.assertEqual(az.build_fast_definition(None, 99)["diarization"], {"enabled": True, "maxSpeakers": 35})
+        self.assertEqual(
+            az.build_fast_definition(None, 1)["diarization"],
+            {"enabled": True, "maxSpeakers": 2},
+        )
+        self.assertEqual(
+            az.build_fast_definition(None, 99)["diarization"],
+            {"enabled": True, "maxSpeakers": 35},
+        )
 
 
 class AzureResponseTest(unittest.TestCase):
     # Shaped like a real diarized fast-transcription response.
-    PAYLOAD = {
+    PAYLOAD: ClassVar[dict] = {
         "durationMilliseconds": 9000,
-        "combinedPhrases": [{"channel": 0, "text": "Sorry, I You don't need to apologize."}],
+        "combinedPhrases": [
+            {"channel": 0, "text": "Sorry, I You don't need to apologize."}
+        ],
         "phrases": [
             {
                 "speaker": 0,
@@ -148,8 +173,16 @@ class AzureResponseTest(unittest.TestCase):
                 "durationMilliseconds": 480,
                 "text": "Sorry, I",
                 "words": [
-                    {"text": "Sorry,", "offsetMilliseconds": 7120, "durationMilliseconds": 280},
-                    {"text": "I", "offsetMilliseconds": 7400, "durationMilliseconds": 200},
+                    {
+                        "text": "Sorry,",
+                        "offsetMilliseconds": 7120,
+                        "durationMilliseconds": 280,
+                    },
+                    {
+                        "text": "I",
+                        "offsetMilliseconds": 7400,
+                        "durationMilliseconds": 200,
+                    },
                 ],
             },
             {
@@ -158,11 +191,31 @@ class AzureResponseTest(unittest.TestCase):
                 "durationMilliseconds": 1050,
                 "text": "You don't need to apologize.",
                 "words": [
-                    {"text": "You", "offsetMilliseconds": 7650, "durationMilliseconds": 150},
-                    {"text": "don't", "offsetMilliseconds": 7800, "durationMilliseconds": 200},
-                    {"text": "need", "offsetMilliseconds": 8000, "durationMilliseconds": 250},
-                    {"text": "to", "offsetMilliseconds": 8250, "durationMilliseconds": 150},
-                    {"text": "apologize.", "offsetMilliseconds": 8400, "durationMilliseconds": 300},
+                    {
+                        "text": "You",
+                        "offsetMilliseconds": 7650,
+                        "durationMilliseconds": 150,
+                    },
+                    {
+                        "text": "don't",
+                        "offsetMilliseconds": 7800,
+                        "durationMilliseconds": 200,
+                    },
+                    {
+                        "text": "need",
+                        "offsetMilliseconds": 8000,
+                        "durationMilliseconds": 250,
+                    },
+                    {
+                        "text": "to",
+                        "offsetMilliseconds": 8250,
+                        "durationMilliseconds": 150,
+                    },
+                    {
+                        "text": "apologize.",
+                        "offsetMilliseconds": 8400,
+                        "durationMilliseconds": 300,
+                    },
                 ],
             },
         ],
@@ -170,7 +223,9 @@ class AzureResponseTest(unittest.TestCase):
 
     def test_keeps_interrupted_speakers_in_separate_cues(self) -> None:
         cues = az.transcription_to_cues(self.PAYLOAD)
-        self.assertEqual([cue.text for cue in cues], ["Sorry, I", "You don't need to apologize."])
+        self.assertEqual(
+            [cue.text for cue in cues], ["Sorry, I", "You don't need to apologize."]
+        )
         self.assertEqual([cue.speaker for cue in cues], [0, 1])
 
     def test_renders_dialogue_with_speaker_changes_marked(self) -> None:
@@ -190,8 +245,16 @@ class AzureResponseTest(unittest.TestCase):
                     "durationMilliseconds": 500,
                     "text": "no speaker field here",
                     "words": [
-                        {"text": "no", "offsetMilliseconds": 0, "durationMilliseconds": 200},
-                        {"text": "speaker", "offsetMilliseconds": 200, "durationMilliseconds": 300},
+                        {
+                            "text": "no",
+                            "offsetMilliseconds": 0,
+                            "durationMilliseconds": 200,
+                        },
+                        {
+                            "text": "speaker",
+                            "offsetMilliseconds": 200,
+                            "durationMilliseconds": 300,
+                        },
                     ],
                 }
             ]
@@ -207,18 +270,66 @@ class AzureResponseTest(unittest.TestCase):
 
 class ScribeResponseTest(unittest.TestCase):
     # Shaped like a real Scribe v2 response: a flat token stream, seconds, string speaker ids.
-    PAYLOAD = {
+    PAYLOAD: ClassVar[dict] = {
         "language_code": "en",
         "text": "Sorry, I You don't need to apologize.",
         "words": [
-            {"text": "Sorry,", "type": "word", "start": 7.12, "end": 7.40, "speaker_id": "speaker_0"},
-            {"text": " ", "type": "spacing", "start": 7.40, "end": 7.40, "speaker_id": "speaker_0"},
-            {"text": "I", "type": "word", "start": 7.40, "end": 7.60, "speaker_id": "speaker_0"},
-            {"text": "You", "type": "word", "start": 7.65, "end": 7.80, "speaker_id": "speaker_1"},
-            {"text": "don't", "type": "word", "start": 7.80, "end": 8.00, "speaker_id": "speaker_1"},
-            {"text": "need", "type": "word", "start": 8.00, "end": 8.25, "speaker_id": "speaker_1"},
-            {"text": "to", "type": "word", "start": 8.25, "end": 8.40, "speaker_id": "speaker_1"},
-            {"text": "apologize.", "type": "word", "start": 8.40, "end": 8.70, "speaker_id": "speaker_1"},
+            {
+                "text": "Sorry,",
+                "type": "word",
+                "start": 7.12,
+                "end": 7.40,
+                "speaker_id": "speaker_0",
+            },
+            {
+                "text": " ",
+                "type": "spacing",
+                "start": 7.40,
+                "end": 7.40,
+                "speaker_id": "speaker_0",
+            },
+            {
+                "text": "I",
+                "type": "word",
+                "start": 7.40,
+                "end": 7.60,
+                "speaker_id": "speaker_0",
+            },
+            {
+                "text": "You",
+                "type": "word",
+                "start": 7.65,
+                "end": 7.80,
+                "speaker_id": "speaker_1",
+            },
+            {
+                "text": "don't",
+                "type": "word",
+                "start": 7.80,
+                "end": 8.00,
+                "speaker_id": "speaker_1",
+            },
+            {
+                "text": "need",
+                "type": "word",
+                "start": 8.00,
+                "end": 8.25,
+                "speaker_id": "speaker_1",
+            },
+            {
+                "text": "to",
+                "type": "word",
+                "start": 8.25,
+                "end": 8.40,
+                "speaker_id": "speaker_1",
+            },
+            {
+                "text": "apologize.",
+                "type": "word",
+                "start": 8.40,
+                "end": 8.70,
+                "speaker_id": "speaker_1",
+            },
         ],
     }
 
@@ -241,14 +352,34 @@ class ScribeResponseTest(unittest.TestCase):
                 {"text": " ", "type": "spacing", "start": 2.0, "end": 2.0},
             ]
         }
-        self.assertEqual([w.text for w in scribe.collect_words(payload)], ["(laughter)"])
+        self.assertEqual(
+            [w.text for w in scribe.collect_words(payload)], ["(laughter)"]
+        )
 
     def test_numbers_unrecognized_speaker_labels_by_first_appearance(self) -> None:
         payload = {
             "words": [
-                {"text": "a", "type": "word", "start": 0.0, "end": 0.1, "speaker_id": "alice"},
-                {"text": "b", "type": "word", "start": 0.1, "end": 0.2, "speaker_id": "bob"},
-                {"text": "c", "type": "word", "start": 0.2, "end": 0.3, "speaker_id": "alice"},
+                {
+                    "text": "a",
+                    "type": "word",
+                    "start": 0.0,
+                    "end": 0.1,
+                    "speaker_id": "alice",
+                },
+                {
+                    "text": "b",
+                    "type": "word",
+                    "start": 0.1,
+                    "end": 0.2,
+                    "speaker_id": "bob",
+                },
+                {
+                    "text": "c",
+                    "type": "word",
+                    "start": 0.2,
+                    "end": 0.3,
+                    "speaker_id": "alice",
+                },
             ]
         }
         self.assertEqual([w.speaker for w in scribe.collect_words(payload)], [0, 1, 0])
@@ -261,11 +392,15 @@ class ScribeResponseTest(unittest.TestCase):
         self.assertEqual(scribe.collect_words({}), [])
         self.assertEqual(scribe.collect_words({"words": "nope"}), [])
         # A word with no start time can't be placed.
-        self.assertEqual(scribe.collect_words({"words": [{"text": "x", "type": "word"}]}), [])
+        self.assertEqual(
+            scribe.collect_words({"words": [{"text": "x", "type": "word"}]}), []
+        )
 
     def test_end_to_end_splits_the_interruption(self) -> None:
         cues = group_words_into_cues(scribe.collect_words(self.PAYLOAD))
-        self.assertEqual([c.text for c in cues], ["Sorry, I", "You don't need to apologize."])
+        self.assertEqual(
+            [c.text for c in cues], ["Sorry, I", "You don't need to apologize."]
+        )
         self.assertIn("- Sorry, I", render_srt(cues))
 
     def test_transcribe_groups_words_into_cues(self) -> None:
@@ -279,7 +414,9 @@ class ScribeResponseTest(unittest.TestCase):
         provider._post = lambda audio_path, timeout: self.PAYLOAD  # type: ignore[method-assign]
 
         cues = provider.transcribe(Path("unused.mp3"), 30)
-        self.assertEqual([c.text for c in cues], ["Sorry, I", "You don't need to apologize."])
+        self.assertEqual(
+            [c.text for c in cues], ["Sorry, I", "You don't need to apologize."]
+        )
         self.assertLess(len(cues), len(scribe.collect_words(self.PAYLOAD)))
 
 
@@ -292,7 +429,11 @@ class ProviderRegistryTest(unittest.TestCase):
     def test_only_useful_providers_are_selectable(self) -> None:
         self.assertEqual(
             self.providers.NAMES,
-            (self.providers.SCRIBE, self.providers.AZURE_FAST, self.providers.AZURE_HYBRID),
+            (
+                self.providers.SCRIBE,
+                self.providers.AZURE_FAST,
+                self.providers.AZURE_HYBRID,
+            ),
         )
 
     def test_azure_mai_is_hidden_from_the_cli(self) -> None:
@@ -310,7 +451,9 @@ class ProviderRegistryTest(unittest.TestCase):
 
     def test_every_selectable_provider_can_report_its_languages(self) -> None:
         for name in self.providers.NAMES:
-            self.assertTrue(self.providers.spec(name).languages, f"{name} lists no languages")
+            self.assertTrue(
+                self.providers.spec(name).languages, f"{name} lists no languages"
+            )
 
 
 class ResolveDiarizeTest(unittest.TestCase):
@@ -322,19 +465,29 @@ class ResolveDiarizeTest(unittest.TestCase):
     def test_defaults_on_where_supported(self) -> None:
         from subtitler.config import resolve_diarize
 
-        self.assertTrue(resolve_diarize(None, self.providers.spec(self.providers.AZURE_FAST)))
-        self.assertTrue(resolve_diarize(None, self.providers.spec(self.providers.AZURE_HYBRID)))
-        self.assertTrue(resolve_diarize(None, self.providers.spec(self.providers.SCRIBE)))
+        self.assertTrue(
+            resolve_diarize(None, self.providers.spec(self.providers.AZURE_FAST))
+        )
+        self.assertTrue(
+            resolve_diarize(None, self.providers.spec(self.providers.AZURE_HYBRID))
+        )
+        self.assertTrue(
+            resolve_diarize(None, self.providers.spec(self.providers.SCRIBE))
+        )
 
     def test_defaults_off_where_unsupported(self) -> None:
         from subtitler.config import resolve_diarize
 
-        self.assertFalse(resolve_diarize(None, self.providers.spec(self.providers.AZURE_MAI)))
+        self.assertFalse(
+            resolve_diarize(None, self.providers.spec(self.providers.AZURE_MAI))
+        )
 
     def test_explicit_no_diarize_wins(self) -> None:
         from subtitler.config import resolve_diarize
 
-        self.assertFalse(resolve_diarize(False, self.providers.spec(self.providers.AZURE_FAST)))
+        self.assertFalse(
+            resolve_diarize(False, self.providers.spec(self.providers.AZURE_FAST))
+        )
 
 
 if __name__ == "__main__":

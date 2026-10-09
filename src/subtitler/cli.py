@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import argparse
 import sys
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 from . import providers, translate
 from .config import (
@@ -39,15 +39,21 @@ def main(argv: Iterable[str] | None = None) -> int:
 def run_translation(args: argparse.Namespace) -> int:
     """Dispatch the two worksheet halves of the translation workflow."""
     if not args.input:
-        raise UserFacingError("an input .srt file is required for --emit-worksheet/--apply-worksheet")
+        raise UserFacingError(
+            "an input .srt file is required for --emit-worksheet/--apply-worksheet"
+        )
     subtitle_path = Path(args.input).expanduser().resolve()
 
     if args.emit_worksheet and args.apply_worksheet:
-        raise UserFacingError("pass either --emit-worksheet or --apply-worksheet, not both.")
+        raise UserFacingError(
+            "pass either --emit-worksheet or --apply-worksheet, not both."
+        )
 
     if args.emit_worksheet:
         if not args.target_language:
-            raise UserFacingError("--target-language is required with --emit-worksheet, e.g. --target-language en")
+            raise UserFacingError(
+                "--target-language is required with --emit-worksheet, e.g. --target-language en"
+            )
         return translate.emit_worksheet_file(
             subtitle_path,
             Path(args.emit_worksheet).expanduser().resolve(),
@@ -62,7 +68,9 @@ def run_translation(args: argparse.Namespace) -> int:
         stem = subtitle_path.stem.split(".")[0]
         output_path = subtitle_path.parent / f"{stem}.{args.target_language}.srt"
     else:
-        raise UserFacingError("pass --output, or --target-language so the output name can be derived.")
+        raise UserFacingError(
+            "pass --output, or --target-language so the output name can be derived."
+        )
 
     return translate.apply_worksheet_file(
         subtitle_path,
@@ -195,8 +203,16 @@ def parse_args(argv: Iterable[str] | None = None) -> argparse.Namespace:
         "--target-language",
         help="Language to translate into, e.g. en, de. Used in the worksheet header and the default output name.",
     )
-    parser.add_argument("--keep-audio", action="store_true", help="Keep the extracted audio file after the run.")
-    parser.add_argument("--force", action="store_true", help="Overwrite the output SRT if it already exists.")
+    parser.add_argument(
+        "--keep-audio",
+        action="store_true",
+        help="Keep the extracted audio file after the run.",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Overwrite the output SRT if it already exists.",
+    )
     parser.add_argument(
         "--dry-run",
         action="store_true",

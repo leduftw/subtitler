@@ -56,11 +56,21 @@ def build_config(args: argparse.Namespace) -> RunConfig:
         output_path = Path(args.output).expanduser().resolve()
     else:
         language_suffix = args.language or "auto"
-        output_path = Path.cwd() / "outputs" / f"{input_path.stem}.{language_suffix}.srt"
+        output_path = (
+            Path.cwd() / "outputs" / f"{input_path.stem}.{language_suffix}.srt"
+        )
 
     # Provider-specific defaults fill in for the "auto"/unset sentinels.
-    audio_format = args.audio_format if args.audio_format != "auto" else provider_spec.default_audio_format
-    max_upload_mib = args.max_upload_mib if args.max_upload_mib is not None else provider_spec.default_max_upload_mib
+    audio_format = (
+        args.audio_format
+        if args.audio_format != "auto"
+        else provider_spec.default_audio_format
+    )
+    max_upload_mib = (
+        args.max_upload_mib
+        if args.max_upload_mib is not None
+        else provider_spec.default_max_upload_mib
+    )
 
     return RunConfig(
         input_path=input_path,
@@ -85,7 +95,9 @@ def build_config(args: argparse.Namespace) -> RunConfig:
     )
 
 
-def resolve_diarize(requested: bool | None, provider_spec: providers.ProviderSpec) -> bool:
+def resolve_diarize(
+    requested: bool | None, provider_spec: providers.ProviderSpec
+) -> bool:
     """Decide whether to diarize this run.
 
     Unset (``None``) means "on where the provider supports it" — diarization is
