@@ -20,6 +20,9 @@ jobs:
     uses: leduftw/playbook/.github/workflows/pipeline.yml@v1
     with:
       playbook-ref: v1
+    # The release jobs read the release environment's secrets (the tap deploy
+    # key, the WinGet token); a called workflow sees no secrets unless passed.
+    secrets: inherit
     # GitHub checks these against every job in the pipeline, including the ones
     # only published repos run; each job then narrows them to what it needs.
     permissions:
