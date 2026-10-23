@@ -22,6 +22,17 @@ no dependencies beyond the Python standard library.
 - `AZURE_SPEECH_ENDPOINT` and `AZURE_SPEECH_API_KEY` for the Azure providers (`azure-fast`, `azure-hybrid`)
 - `ELEVENLABS_API_KEY` for `scribe`
 
+## Command line
+
+`./subtitler --help` lists every option, and `./subtitler --version` (or `-V`)
+prints the version. Run with no arguments at all, it prints the same help and
+what it needs: a video or audio file. The help is colored only in a terminal;
+`--no-color`, `NO_COLOR` or `TERM=dumb` turn the colors off.
+
+A mistake on the command line, such as an unknown option or a file that isn't
+there, exits 2. A failure while running, such as a missing `ffmpeg` or a
+provider error, exits 1.
+
 ## Providers
 
 Every provider produces word-level timing and speaker labels in sync with the audio.

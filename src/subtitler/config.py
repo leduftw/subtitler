@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from . import providers
-from .errors import UserFacingError
+from .errors import UsageError
 
 # Generic defaults that don't depend on the chosen provider.
 DEFAULT_AUDIO_BITRATE = "48k"
@@ -47,7 +47,7 @@ class RunConfig:
 def build_config(args: argparse.Namespace) -> RunConfig:
     """Resolve parsed CLI arguments into a fully materialized :class:`RunConfig`."""
     if not args.input:
-        raise UserFacingError("input file is required unless --list-languages is used")
+        raise UsageError("input file is required unless --list-languages is used")
 
     provider_spec = providers.spec(args.provider)
     input_path = Path(args.input).expanduser().resolve()

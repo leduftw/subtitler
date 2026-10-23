@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import argparse
+import os
+import re
 import sys
 from collections.abc import Iterable
 from pathlib import Path
 
-from . import providers, translate
+from . import __version__, providers, translate
 from .config import (
     DEFAULT_API_TIMEOUT_SECONDS,
     DEFAULT_AUDIO_BITRATE,
@@ -15,12 +17,61 @@ from .config import (
     DEFAULT_SAMPLE_RATE,
     build_config,
 )
-from .errors import UserFacingError
+from .errors import UsageError, UserFacingError
 from .pipeline import run
+
+# The repo's GitHub description: subtitler's help and its repo describe it alike.
+DESCRIPTION = "subtitles for any video, in any language"
+
+# What a bare `subtitler` adds after its help: the one thing it needs.
+MISSING_INPUT = "To make subtitles, pass a video or audio file: subtitler <file>"
+
+
+class ArgumentParser(argparse.ArgumentParser):
+    def _print_message(self, message: str | None, file=None) -> None:
+        # Python's FORCE_COLOR and PYTHON_COLORS can color a pipe or outrank
+        # NO_COLOR; here colors only ever reach a terminal.
+        file = file or sys.stderr
+        if message and (
+            not file.isatty()
+            or os.environ.get("NO_COLOR")
+            or os.environ.get("TERM") == "dumb"
+        ):
+            message = re.sub(r"\x1b\[[0-9;]*m", "", message)
+        super()._print_message(message, file)
+
+
+def no_color_requested(parser: ArgumentParser, options: list[str]) -> bool:
+    """Recognize the global flag, including argparse's unambiguous abbreviations."""
+    for option in options:
+        if option == "--no-color":
+            return True
+        if parser.allow_abbrev and option.startswith("--"):
+            matches = [
+                name
+                for name in parser._option_string_actions
+                if name.startswith(option)
+            ]
+            if matches == ["--no-color"]:
+                return True
+    return False
 
 
 def main(argv: Iterable[str] | None = None) -> int:
-    args = parse_args(argv)
+    argv = sys.argv[1:] if argv is None else list(argv)
+    # --no-color decides how the help looks, and -h prints the help the moment
+    # argparse reaches it, so the flag is read before parsing.
+    options = argv[: argv.index("--")] if "--" in argv else argv
+    parser = build_parser()
+    # On Python before 3.14 this attribute is harmless and help stays plain.
+    parser.color = not no_color_requested(parser, options)
+    if not argv:
+        # A bare `subtitler` has nothing to subtitle, so it shows how instead.
+        parser.print_help()
+        print(f"\n{MISSING_INPUT}")
+        return 0
+
+    args = parser.parse_args(argv)
     try:
         if args.list_languages:
             providers.print_supported_languages(args.provider)
@@ -31,27 +82,27 @@ def main(argv: Iterable[str] | None = None) -> int:
 
         config = build_config(args)
         return run(config)
-    except UserFacingError as exc:
-        print(f"error: {exc}", file=sys.stderr)
-        return 2
+    except UsageError as exc:
+        parser.error(str(exc))
+    except (UserFacingError, OSError, UnicodeError) as exc:
+        print(f"subtitler: {exc}", file=sys.stderr)
+        return 1
 
 
 def run_translation(args: argparse.Namespace) -> int:
     """Dispatch the two worksheet halves of the translation workflow."""
     if not args.input:
-        raise UserFacingError(
+        raise UsageError(
             "an input .srt file is required for --emit-worksheet/--apply-worksheet"
         )
     subtitle_path = Path(args.input).expanduser().resolve()
 
     if args.emit_worksheet and args.apply_worksheet:
-        raise UserFacingError(
-            "pass either --emit-worksheet or --apply-worksheet, not both."
-        )
+        raise UsageError("pass either --emit-worksheet or --apply-worksheet, not both.")
 
     if args.emit_worksheet:
         if not args.target_language:
-            raise UserFacingError(
+            raise UsageError(
                 "--target-language is required with --emit-worksheet, e.g. --target-language en"
             )
         return translate.emit_worksheet_file(
@@ -68,7 +119,7 @@ def run_translation(args: argparse.Namespace) -> int:
         stem = subtitle_path.stem.split(".")[0]
         output_path = subtitle_path.parent / f"{stem}.{args.target_language}.srt"
     else:
-        raise UserFacingError(
+        raise UsageError(
             "pass --output, or --target-language so the output name can be derived."
         )
 
@@ -80,16 +131,34 @@ def run_translation(args: argparse.Namespace) -> int:
     )
 
 
-def parse_args(argv: Iterable[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
+def build_parser(color: bool = True) -> ArgumentParser:
+    # argparse colors its help and suggests fixes for typos from Python 3.14 on;
+    # older versions print plain text without suggestions.
+    modern = (
+        {"color": color, "suggest_on_error": True}
+        if sys.version_info >= (3, 14)
+        else {}
+    )
+    parser = ArgumentParser(
         prog="subtitler",
-        description="Generate an SRT subtitle file from a video/audio file.",
+        description=DESCRIPTION,
         epilog=(
             "Language hints use short codes such as en=English, de=German, es=Spanish. "
             "Run `subtitler --list-languages` for the provider-specific language/code list."
         ),
+        **modern,
     )
     parser.add_argument("input", nargs="?", help="Input video or audio file.")
+    parser.add_argument(
+        "-V",
+        "--version",
+        action="version",
+        version=f"subtitler {__version__}",
+        help="Show the version and exit.",
+    )
+    parser.add_argument(
+        "--no-color", action="store_true", help="Print without colors, like NO_COLOR=1."
+    )
     parser.add_argument(
         "--provider",
         choices=providers.NAMES,
@@ -132,7 +201,7 @@ def parse_args(argv: Iterable[str] | None = None) -> argparse.Namespace:
         "--audio-format",
         choices=("auto", "m4a", "mp3"),
         default="auto",
-        help="Extracted audio format. Default: auto (m4a for OpenAI, mp3 for the Azure providers).",
+        help="Extracted audio format. Default: auto (the selected provider's preferred format).",
     )
     parser.add_argument(
         "--audio-bitrate",
@@ -147,10 +216,7 @@ def parse_args(argv: Iterable[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--max-upload-mib",
         type=int,
-        help=(
-            "Maximum upload size accepted by the provider. Defaults to 25 MiB for OpenAI, "
-            "500 MiB for azure-fast, 300 MiB for azure-hybrid."
-        ),
+        help="Maximum upload size in MiB. Defaults to the selected provider's upload limit.",
     )
     parser.add_argument(
         "--diarize",
@@ -218,4 +284,4 @@ def parse_args(argv: Iterable[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Extract audio and print the cost estimate, but skip the transcription provider's API call.",
     )
-    return parser.parse_args(argv)
+    return parser
