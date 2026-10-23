@@ -228,7 +228,7 @@ pipeline.py   run(): probe -> extract audio -> transcribe -> render -> write SRT
 media.py      ffmpeg/ffprobe and filesystem preconditions
 srt.py        the Cue type, SRT rendering, line wrapping, cue grouping
 align.py      merge a transcript's wording onto external word timings + speakers
-errors.py     UserFacingError
+errors.py     UserFacingError (exit 1) and UsageError (exit 2)
 providers/
   base.py            ProviderSpec + TranscriptionProvider abstraction
   azure_mai.py       MAI request builder + language list (internal; not selectable)
