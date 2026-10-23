@@ -23,9 +23,9 @@ from .srt import Cue, normalize_srt_text, render_srt
 
 def run(config: RunConfig) -> int:
     """Run the full pipeline for one input file. Returns a process exit code."""
+    ensure_input(config.input_path)
     ensure_tool("ffmpeg")
     ensure_tool("ffprobe")
-    ensure_input(config.input_path)
     ensure_output(config.output_path, force=config.force, dry_run=config.dry_run)
 
     provider = providers.build(config)

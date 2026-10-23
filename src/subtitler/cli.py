@@ -41,12 +41,30 @@ class ArgumentParser(argparse.ArgumentParser):
         super()._print_message(message, file)
 
 
+def no_color_requested(parser: ArgumentParser, options: list[str]) -> bool:
+    """Recognize the global flag, including argparse's unambiguous abbreviations."""
+    for option in options:
+        if option == "--no-color":
+            return True
+        if parser.allow_abbrev and option.startswith("--"):
+            matches = [
+                name
+                for name in parser._option_string_actions
+                if name.startswith(option)
+            ]
+            if matches == ["--no-color"]:
+                return True
+    return False
+
+
 def main(argv: Iterable[str] | None = None) -> int:
     argv = sys.argv[1:] if argv is None else list(argv)
     # --no-color decides how the help looks, and -h prints the help the moment
     # argparse reaches it, so the flag is read before parsing.
     options = argv[: argv.index("--")] if "--" in argv else argv
-    parser = build_parser(color="--no-color" not in options)
+    parser = build_parser()
+    # On Python before 3.14 this attribute is harmless and help stays plain.
+    parser.color = not no_color_requested(parser, options)
     if not argv:
         # A bare `subtitler` has nothing to subtitle, so it shows how instead.
         parser.print_help()
@@ -66,7 +84,7 @@ def main(argv: Iterable[str] | None = None) -> int:
         return run(config)
     except UsageError as exc:
         parser.error(str(exc))
-    except UserFacingError as exc:
+    except (UserFacingError, OSError, UnicodeError) as exc:
         print(f"subtitler: {exc}", file=sys.stderr)
         return 1
 
@@ -183,7 +201,7 @@ def build_parser(color: bool = True) -> ArgumentParser:
         "--audio-format",
         choices=("auto", "m4a", "mp3"),
         default="auto",
-        help="Extracted audio format. Default: auto (m4a for OpenAI, mp3 for the Azure providers).",
+        help="Extracted audio format. Default: auto (the selected provider's preferred format).",
     )
     parser.add_argument(
         "--audio-bitrate",
@@ -198,10 +216,7 @@ def build_parser(color: bool = True) -> ArgumentParser:
     parser.add_argument(
         "--max-upload-mib",
         type=int,
-        help=(
-            "Maximum upload size accepted by the provider. Defaults to 25 MiB for OpenAI, "
-            "500 MiB for azure-fast, 300 MiB for azure-hybrid."
-        ),
+        help="Maximum upload size in MiB. Defaults to the selected provider's upload limit.",
     )
     parser.add_argument(
         "--diarize",

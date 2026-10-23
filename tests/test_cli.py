@@ -69,6 +69,19 @@ class HelpTest(unittest.TestCase):
         self.assertEqual((code, out), (2, ""))
         self.assertIn("input file does not exist", err)
 
+    def test_command_words_and_flags_can_still_be_input_filenames(self) -> None:
+        for name in ("help", "version", "update", "--no-color"):
+            argv = ["--", name] if name.startswith("--") else [name]
+            with (
+                self.subTest(name=name),
+                mock.patch("subtitler.cli.run", return_value=0) as pipeline,
+            ):
+                self.assertEqual(run(*argv), (0, "", ""))
+                self.assertEqual(pipeline.call_args.args[0].input_path.name, name)
+
+    def test_help_describes_only_current_provider_defaults(self) -> None:
+        self.assertNotIn("OpenAI", run("--help")[1])
+
 
 class VersionTest(unittest.TestCase):
     def test_both_version_flags_print_the_name_and_version(self) -> None:
@@ -128,6 +141,39 @@ class ExitCodeTest(unittest.TestCase):
         self.assertEqual((code, out), (1, ""))
         self.assertTrue(err.startswith("subtitler: no subtitle cues found in "), err)
 
+    def test_invalid_input_is_rejected_before_checking_external_tools(self) -> None:
+        with mock.patch("subtitler.media.shutil.which", return_value=None):
+            code, out, err = run(str(self.root / "missing.mp4"))
+        self.assertEqual((code, out), (2, ""))
+        self.assertIn("subtitler: error: input file does not exist", err)
+
+    def test_a_valid_input_without_tools_is_a_runtime_failure(self) -> None:
+        with mock.patch("subtitler.media.shutil.which", return_value=None):
+            code, out, err = run(str(self.empty_srt))
+        self.assertEqual((code, out), (1, ""))
+        self.assertIn("subtitler: ffmpeg is required", err)
+
+    def test_filesystem_and_encoding_failures_have_clean_diagnostics(self) -> None:
+        valid = self.root / "valid.srt"
+        valid.write_text("1\n00:00:00,000 --> 00:00:01,000\nHello\n", encoding="utf-8")
+        invalid = self.root / "invalid.srt"
+        invalid.write_bytes(b"\xff\xfe")
+        for source, destination in (
+            (valid, self.root),
+            (invalid, self.root / "worksheet.txt"),
+        ):
+            with self.subTest(source=source):
+                code, out, err = run(
+                    str(source),
+                    "--emit-worksheet",
+                    str(destination),
+                    "--target-language",
+                    "en",
+                )
+                self.assertEqual((code, out), (1, ""))
+                self.assertTrue(err.startswith("subtitler: "), err)
+                self.assertNotIn("Traceback", err)
+
     @unittest.skipUnless(
         sys.version_info >= (3, 14), "argparse suggests fixes from Python 3.14 on"
     )
@@ -145,11 +191,23 @@ class ColorTest(unittest.TestCase):
 
     def test_no_color_turns_colors_off_wherever_it_appears(self) -> None:
         with forced_colors():
-            for argv in (["--no-color", "--help"], ["--help", "--no-color"]):
+            for argv in (
+                ["--no-color", "--help"],
+                ["--help", "--no-color"],
+                ["--no-col", "--help"],
+                ["--help", "--no-col"],
+            ):
                 with self.subTest(argv=argv):
                     code, out, _ = run(*argv, stdout_tty=True)
                     self.assertEqual(code, 0)
                     self.assertNotIn("\x1b[", out)
+
+    def test_no_color_scanning_preserves_data_and_other_options(self) -> None:
+        with forced_colors():
+            self.assertIn("\x1b[", run("--no-diarize", "--help", stdout_tty=True)[1])
+            code, _, err = run("--", "--no-color", stderr_tty=True)
+            self.assertEqual(code, 2)
+            self.assertIn("\x1b[", err)
 
     def test_no_color_and_a_dumb_terminal_win_over_python_settings(self) -> None:
         for env in ({"NO_COLOR": "1"}, {"TERM": "dumb"}):
