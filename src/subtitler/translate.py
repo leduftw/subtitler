@@ -31,7 +31,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from .errors import UserFacingError
+from .errors import UsageError, UserFacingError
 from .srt import Cue, format_srt_timestamp, normalize_srt_text, parse_srt, render_srt
 
 WORKSHEET_VERSION = "v1"
@@ -169,7 +169,7 @@ def apply_worksheet(worksheet: str, cues: list[Cue]) -> list[Cue]:
 def read_subtitle_cues(path: Path) -> list[Cue]:
     """Load an existing SRT file as cues."""
     if not path.is_file():
-        raise UserFacingError(f"subtitle file not found: {path}")
+        raise UsageError(f"subtitle file not found: {path}")
     cues = parse_srt(path.read_text(encoding="utf-8"))
     if not cues:
         raise UserFacingError(f"no subtitle cues found in {path} (is it an .srt file?)")
@@ -209,7 +209,7 @@ def apply_worksheet_file(
             f"{output_path} already exists. Pass --force to overwrite."
         )
     if not worksheet_path.is_file():
-        raise UserFacingError(f"worksheet not found: {worksheet_path}")
+        raise UsageError(f"worksheet not found: {worksheet_path}")
 
     cues = read_subtitle_cues(subtitle_path)
     translated = apply_worksheet(worksheet_path.read_text(encoding="utf-8"), cues)

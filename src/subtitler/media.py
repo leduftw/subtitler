@@ -6,7 +6,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from .errors import UserFacingError
+from .errors import UsageError, UserFacingError
 
 
 def ensure_tool(name: str) -> None:
@@ -18,9 +18,9 @@ def ensure_tool(name: str) -> None:
 def ensure_input(path: Path) -> None:
     """Raise if the input path is missing or is not a regular file."""
     if not path.exists():
-        raise UserFacingError(f"input file does not exist: {path}")
+        raise UsageError(f"input file does not exist: {path}")
     if not path.is_file():
-        raise UserFacingError(f"input path is not a file: {path}")
+        raise UsageError(f"input path is not a file: {path}")
 
 
 def ensure_output(path: Path, *, force: bool, dry_run: bool) -> None:
