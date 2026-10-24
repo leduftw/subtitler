@@ -52,8 +52,8 @@ ElevenLabs account, or for locales Scribe doesn't cover.
 ## Speaker labels (diarization)
 
 Without speaker separation, an interruption collapses into nonsense — one person
-says "But, I…" and the other cuts in with "You don't wanna do that", and the
-subtitle reads `But I you don't wanna do that.`
+says "Sorry, I…" and the other cuts in with "You don't need to apologize", and
+the subtitle reads `Sorry I you don't need to apologize.`
 
 Every provider identifies who is speaking, starts a new subtitle at each change of
 speaker, and marks each turn with the standard `-` dialogue prefix:
@@ -61,11 +61,11 @@ speaker, and marks each turn with the standard `-` dialogue prefix:
 ```text
 2
 00:00:07,120 --> 00:00:08,340
-- But, I
+- Sorry, I
 
 3
 00:00:08,340 --> 00:00:09,900
-- You don't wanna do that.
+- You don't need to apologize.
 ```
 
 This is **on by default** — Azure bills diarization at no extra cost on fast
