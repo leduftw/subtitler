@@ -64,17 +64,17 @@ class GroupWordsTest(unittest.TestCase):
         """The interruption case: two voices 50ms apart must not merge into one cue."""
         cues = group_words_into_cues(
             words(
-                (7120, 7400, "But,", 0),
+                (7120, 7400, "Sorry,", 0),
                 (7400, 7600, "I", 0),
                 (7650, 7800, "You", 1),
                 (7800, 8000, "don't", 1),
-                (8000, 8250, "wanna", 1),
-                (8250, 8400, "do", 1),
-                (8400, 8700, "that.", 1),
+                (8000, 8250, "need", 1),
+                (8250, 8400, "to", 1),
+                (8400, 8700, "apologize.", 1),
             )
         )
         self.assertEqual(
-            [cue.text for cue in cues], ["But, I", "You don't wanna do that."]
+            [cue.text for cue in cues], ["Sorry, I", "You don't need to apologize."]
         )
         self.assertEqual([cue.speaker for cue in cues], [0, 1])
 
@@ -97,19 +97,19 @@ class GroupWordsTest(unittest.TestCase):
 class AlignTest(unittest.TestCase):
     def test_transfers_timings_and_speakers_onto_transcript_wording(self) -> None:
         timed = words(
-            (7120, 7400, "but", 0),
+            (7120, 7400, "sorry", 0),
             (7400, 7600, "i", 0),
             (7650, 7800, "you", 1),
             (7800, 8000, "dont", 1),
-            (8000, 8250, "wanna", 1),
-            (8250, 8400, "do", 1),
-            (8400, 8700, "that", 1),
+            (8000, 8250, "need", 1),
+            (8250, 8400, "to", 1),
+            (8400, 8700, "apologize", 1),
         )
-        aligned = align_text_to_words("But, I— You don't wanna do that.", timed)
+        aligned = align_text_to_words("Sorry, I— You don't need to apologize.", timed)
 
         self.assertEqual(
             [cue.text for cue in aligned],
-            ["But,", "I—", "You", "don't", "wanna", "do", "that."],
+            ["Sorry,", "I—", "You", "don't", "need", "to", "apologize."],
         )
         self.assertEqual([cue.speaker for cue in aligned], [0, 0, 1, 1, 1, 1, 1])
         self.assertEqual(aligned[0].start_ms, 7120)
@@ -163,16 +163,18 @@ class AzureResponseTest(unittest.TestCase):
     # Shaped like a real diarized fast-transcription response.
     PAYLOAD: ClassVar[dict] = {
         "durationMilliseconds": 9000,
-        "combinedPhrases": [{"channel": 0, "text": "But, I You don't wanna do that."}],
+        "combinedPhrases": [
+            {"channel": 0, "text": "Sorry, I You don't need to apologize."}
+        ],
         "phrases": [
             {
                 "speaker": 0,
                 "offsetMilliseconds": 7120,
                 "durationMilliseconds": 480,
-                "text": "But, I",
+                "text": "Sorry, I",
                 "words": [
                     {
-                        "text": "But,",
+                        "text": "Sorry,",
                         "offsetMilliseconds": 7120,
                         "durationMilliseconds": 280,
                     },
@@ -187,7 +189,7 @@ class AzureResponseTest(unittest.TestCase):
                 "speaker": 1,
                 "offsetMilliseconds": 7650,
                 "durationMilliseconds": 1050,
-                "text": "You don't wanna do that.",
+                "text": "You don't need to apologize.",
                 "words": [
                     {
                         "text": "You",
@@ -200,17 +202,17 @@ class AzureResponseTest(unittest.TestCase):
                         "durationMilliseconds": 200,
                     },
                     {
-                        "text": "wanna",
+                        "text": "need",
                         "offsetMilliseconds": 8000,
                         "durationMilliseconds": 250,
                     },
                     {
-                        "text": "do",
+                        "text": "to",
                         "offsetMilliseconds": 8250,
                         "durationMilliseconds": 150,
                     },
                     {
-                        "text": "that.",
+                        "text": "apologize.",
                         "offsetMilliseconds": 8400,
                         "durationMilliseconds": 300,
                     },
@@ -222,14 +224,14 @@ class AzureResponseTest(unittest.TestCase):
     def test_keeps_interrupted_speakers_in_separate_cues(self) -> None:
         cues = az.transcription_to_cues(self.PAYLOAD)
         self.assertEqual(
-            [cue.text for cue in cues], ["But, I", "You don't wanna do that."]
+            [cue.text for cue in cues], ["Sorry, I", "You don't need to apologize."]
         )
         self.assertEqual([cue.speaker for cue in cues], [0, 1])
 
     def test_renders_dialogue_with_speaker_changes_marked(self) -> None:
         srt = render_srt(az.transcription_to_cues(self.PAYLOAD))
-        self.assertIn("- But, I", srt)
-        self.assertIn("- You don't wanna do that.", srt)
+        self.assertIn("- Sorry, I", srt)
+        self.assertIn("- You don't need to apologize.", srt)
 
     def test_words_inherit_their_phrase_speaker(self) -> None:
         collected = az.collect_words(self.PAYLOAD)
@@ -270,10 +272,10 @@ class ScribeResponseTest(unittest.TestCase):
     # Shaped like a real Scribe v2 response: a flat token stream, seconds, string speaker ids.
     PAYLOAD: ClassVar[dict] = {
         "language_code": "en",
-        "text": "But, I You don't wanna do that.",
+        "text": "Sorry, I You don't need to apologize.",
         "words": [
             {
-                "text": "But,",
+                "text": "Sorry,",
                 "type": "word",
                 "start": 7.12,
                 "end": 7.40,
@@ -308,21 +310,21 @@ class ScribeResponseTest(unittest.TestCase):
                 "speaker_id": "speaker_1",
             },
             {
-                "text": "wanna",
+                "text": "need",
                 "type": "word",
                 "start": 8.00,
                 "end": 8.25,
                 "speaker_id": "speaker_1",
             },
             {
-                "text": "do",
+                "text": "to",
                 "type": "word",
                 "start": 8.25,
                 "end": 8.40,
                 "speaker_id": "speaker_1",
             },
             {
-                "text": "that.",
+                "text": "apologize.",
                 "type": "word",
                 "start": 8.40,
                 "end": 8.70,
@@ -337,7 +339,7 @@ class ScribeResponseTest(unittest.TestCase):
 
     def test_drops_spacing_tokens(self) -> None:
         collected = scribe.collect_words(self.PAYLOAD)
-        self.assertEqual([w.text for w in collected][:3], ["But,", "I", "You"])
+        self.assertEqual([w.text for w in collected][:3], ["Sorry,", "I", "You"])
 
     def test_maps_speaker_id_strings_to_ints(self) -> None:
         collected = scribe.collect_words(self.PAYLOAD)
@@ -396,8 +398,10 @@ class ScribeResponseTest(unittest.TestCase):
 
     def test_end_to_end_splits_the_interruption(self) -> None:
         cues = group_words_into_cues(scribe.collect_words(self.PAYLOAD))
-        self.assertEqual([c.text for c in cues], ["But, I", "You don't wanna do that."])
-        self.assertIn("- But, I", render_srt(cues))
+        self.assertEqual(
+            [c.text for c in cues], ["Sorry, I", "You don't need to apologize."]
+        )
+        self.assertIn("- Sorry, I", render_srt(cues))
 
     def test_transcribe_groups_words_into_cues(self) -> None:
         """Scribe times every word, so the provider must group before returning.
@@ -410,7 +414,9 @@ class ScribeResponseTest(unittest.TestCase):
         provider._post = lambda audio_path, timeout: self.PAYLOAD  # type: ignore[method-assign]
 
         cues = provider.transcribe(Path("unused.mp3"), 30)
-        self.assertEqual([c.text for c in cues], ["But, I", "You don't wanna do that."])
+        self.assertEqual(
+            [c.text for c in cues], ["Sorry, I", "You don't need to apologize."]
+        )
         self.assertLess(len(cues), len(scribe.collect_words(self.PAYLOAD)))
 
 

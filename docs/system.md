@@ -107,7 +107,7 @@ MAI is in public preview and supports 43 languages. When a requested `--language
 
 Each returned phrase then carries a `speaker` integer, which `_azure_speech.py` attaches to every word it parses out of that phrase. Two things consume it:
 
-1. `group_words_into_cues` treats a change of speaker as a hard cue boundary, so one subtitle never blends two voices. This is what stops an interruption ("But, I—" / "You don't wanna do that.") from merging into a single nonsensical line.
+1. `group_words_into_cues` treats a change of speaker as a hard cue boundary, so one subtitle never blends two voices. This is what stops an interruption ("Sorry, I—" / "You don't need to apologize.") from merging into a single nonsensical line.
 2. `render_srt` prefixes `- ` to each cue that starts a new turn — but only when the transcript actually contains two or more speakers, so diarizing a single-voice recording costs nothing in readability.
 
 Scribe does the same thing with `diarize=true` and `num_speakers`, returning a `speaker_id` per token instead of per phrase; `elevenlabs_scribe.collect_words` normalizes that into the same integer speaker ids, so everything downstream is shared.
