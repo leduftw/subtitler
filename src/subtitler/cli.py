@@ -20,8 +20,8 @@ from .config import (
 from .errors import UsageError, UserFacingError
 from .pipeline import run
 
-# The repo's GitHub description: subtitler's help and its repo describe it alike.
-DESCRIPTION = "subtitles for any video, in any language"
+# The repo's GitHub description as a sentence: subtitler's help and its repo describe it in the same words.
+DESCRIPTION = "Subtitles for any video, in any language."
 
 # What a bare `subtitler` adds after its help: the one thing it needs.
 MISSING_INPUT = "To make subtitles, pass a video or audio file: subtitler <file>"
