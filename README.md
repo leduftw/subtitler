@@ -51,9 +51,10 @@ Every release also ships standalone programs for macOS, Linux and Windows, each 
 both Arm and Intel/AMD chips, with stable names such as `subtitler-macos-arm64.zip`.
 They carry their own Python. Grab the archive for your platform from the
 [latest release](https://github.com/leduftw/subtitler/releases/latest), extract it,
-and run `subtitler`. A standalone program unpacks itself each time it starts, which
-takes a couple of seconds on a Mac. If macOS Gatekeeper blocks a browser-downloaded
-program, clear the quarantine flag with `xattr -d com.apple.quarantine subtitler`.
+and run `subtitler`, keeping the `subtitler-runtime-<version>` folder beside it. macOS
+checks a new program the first time it runs, which takes a couple of seconds once.
+If macOS Gatekeeper blocks a browser-downloaded program, clear the quarantine flag in
+the extracted folder with `xattr -dr com.apple.quarantine .`.
 
 ### Requirements
 
