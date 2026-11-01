@@ -82,16 +82,19 @@ class HelpTest(unittest.TestCase):
         self.assertIn("subtitler <command>", err)
         self.assertLessEqual(len(err.splitlines()), 3)
 
-    def test_help_lists_every_command_before_the_options(self) -> None:
+    def test_help_lists_the_commands_as_dbird_and_monad_do(self) -> None:
         out = run("--help")[1]
         self.assertLess(out.index("commands:"), out.index("positional arguments:"))
         self.assertLess(out.index("positional arguments:"), out.index("options:"))
         listed = out.split("commands:\n")[1].split("\n\n")[0]
-        rows = [line.split()[0].rstrip(",") for line in listed.splitlines()]
-        self.assertEqual(rows[:2], ["help", "version"])
-        for word in cli.COMMANDS:
-            with self.subTest(word=word):
-                self.assertIn(word, listed)
+        self.assertEqual(
+            [line.split(maxsplit=1) for line in listed.splitlines()],
+            [
+                ["update", "Update subtitler to the latest release"],
+                ["version", "Print the version"],
+                ["help", "Show this help, or the help of one command"],
+            ],
+        )
 
     def test_the_list_describes_each_command_as_its_own_help_does(self) -> None:
         listed = " ".join(run("--help")[1].split())
