@@ -57,7 +57,6 @@ program, clear the quarantine flag with `xattr -d com.apple.quarantine subtitler
 
 ### Requirements
 
-
 - `ffmpeg` and `ffprobe` on `PATH`. Homebrew installs them for you; elsewhere, use
   `winget install Gyan.FFmpeg` on Windows or your system's package manager on Linux.
 - `AZURE_SPEECH_ENDPOINT` and `AZURE_SPEECH_API_KEY` for the Azure providers (`azure-fast`, `azure-hybrid`)
