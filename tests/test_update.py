@@ -38,11 +38,36 @@ class ChannelTest(unittest.TestCase):
                 )
 
     def test_winget_keeps_subtitler_in_its_packages_folder(self) -> None:
-        path = (
-            r"C:\Users\me\AppData\Local\Microsoft\WinGet\Packages"
-            r"\leduftw.subtitler_Microsoft.Winget.Source_8wekyb3d8bbwe\subtitler.exe"
+        package = "leduftw.subtitler_Microsoft.Winget.Source_8wekyb3d8bbwe"
+        for root in (
+            r"C:\Users\me\AppData\Local\Microsoft\WinGet\Packages",
+            r"C:\Program Files\WinGet\Packages",
+            r"C:\Program Files (x86)\WinGet\Packages",
+            r"D:\Portable apps",
+        ):
+            path = Path(f"{root}\\{package}\\subtitler.exe")
+            with self.subTest(path=path):
+                self.assertEqual(update.channel_of(path, True, NOWHERE), update.WINGET)
+
+    def test_winget_identity_matches_a_whole_directory_ignoring_case(self) -> None:
+        package = "LEDUFTW.SUBTITLER_MICROSOFT.WINGET.SOURCE_8WEKYB3D8BBWE"
+        self.assertEqual(
+            update.channel_of(
+                Path(f"D:/Portable/{package}/subtitler.exe"), True, NOWHERE
+            ),
+            update.WINGET,
         )
-        self.assertEqual(update.channel_of(Path(path), True, NOWHERE), update.WINGET)
+        for path in (
+            f"D:/Portable/backup-{package}/subtitler.exe",
+            f"D:/Portable/{package}-backup/subtitler.exe",
+            f"D:/Portable/{package}",
+            "C:/Users/me/AppData/Local/Microsoft/WinGet/subtitler.exe",
+            "C:/Program Files/WinGet/Packages/another.tool/subtitler.exe",
+        ):
+            with self.subTest(path=path):
+                self.assertEqual(
+                    update.channel_of(Path(path), True, NOWHERE), update.INSTALLER
+                )
 
     def test_any_other_standalone_program_came_from_the_installer(self) -> None:
         for path in ("/home/me/.local/bin/subtitler", "/usr/local/bin/subtitler"):
@@ -78,6 +103,16 @@ class ChannelTest(unittest.TestCase):
     def test_anything_else_is_a_clone(self) -> None:
         path = Path("/home/me/subtitler/src/subtitler/update.py")
         self.assertEqual(update.channel_of(path, False, NOWHERE), update.CLONE)
+
+    def test_a_clone_stays_a_clone_in_a_tool_managers_environment(self) -> None:
+        path = Path("/home/me/subtitler/src/subtitler/update.py")
+        for name in ("uv-receipt.toml", "pipx_metadata.json"):
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as temp:
+                environment = Path(temp)
+                (environment / name).write_text("", encoding="utf-8")
+                self.assertEqual(
+                    update.channel_of(path, False, environment), update.CLONE
+                )
 
     def test_a_clone_inside_a_folder_called_cellar_is_still_a_clone(self) -> None:
         path = Path("/Cellar/subtitler/src/subtitler/update.py")

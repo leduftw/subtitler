@@ -60,16 +60,22 @@ def channel_of(path: Path, frozen: bool, environment: Path) -> str:
     if frozen:
         if "/Cellar/subtitler/" in text:
             return HOMEBREW
-        if "/microsoft/winget/" in text.lower():
+        # WinGet's portable package directory keeps this identity even when
+        # installed for the whole machine or under a configured portable root.
+        # Neither of those roots has to contain Microsoft/WinGet.
+        package_folder = "leduftw.subtitler_microsoft.winget.source_8wekyb3d8bbwe"
+        if package_folder in text.lower().split("/")[:-1]:
             return WINGET
         return INSTALLER
+    # A clone can run through an installed tool's interpreter. Its environment
+    # receipt describes that installed copy, not this source checkout.
+    if "/site-packages/" not in text and "/dist-packages/" not in text:
+        return CLONE
     if (environment / "uv-receipt.toml").is_file():
         return UV
     if (environment / "pipx_metadata.json").is_file():
         return PIPX
-    if "/site-packages/" in text or "/dist-packages/" in text:
-        return PIP
-    return CLONE
+    return PIP
 
 
 def plan(channel: str, folder: Path, windows: bool) -> Plan | None:
