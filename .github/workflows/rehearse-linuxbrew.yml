@@ -1,0 +1,25 @@
+# Temporary: only on this rehearsal branch. Homebrew's dry run is macOS-only.
+name: rehearse linuxbrew
+on: pull_request
+permissions:
+  contents: read
+jobs:
+  linuxbrew:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Fetch the playbook
+        run: |
+          git clone --quiet https://github.com/leduftw/playbook "$RUNNER_TEMP/playbook"
+          git -C "$RUNNER_TEMP/playbook" checkout --quiet 6ebddeba6cc0a945fc31c4bfc9a89182f3169fc9
+      - name: Build the Linux program
+        run: python "$RUNNER_TEMP/playbook/bin/playbook" ci build --target linux-x64 --version 1.0.2 --out dist
+      - name: Install it through Homebrew
+        run: |
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          touch dist/subtitler-macos-arm64.zip dist/subtitler-macos-x64.zip dist/subtitler-linux-arm64.tar.gz
+          python "$RUNNER_TEMP/playbook/bin/playbook" ci homebrew --version 1.0.2 --dist dist --dry-run
