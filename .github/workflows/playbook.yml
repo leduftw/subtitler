@@ -17,9 +17,9 @@ permissions:
 
 jobs:
   playbook:
-    uses: leduftw/playbook/.github/workflows/pipeline.yml@3c889e9bb61eb8b3e889b862145b9c2c0ec2769f
+    uses: leduftw/playbook/.github/workflows/pipeline.yml@0c793ce57a5f1cad6072bd5338506be9b517537b
     with:
-      playbook-ref: 3c889e9bb61eb8b3e889b862145b9c2c0ec2769f
+      playbook-ref: 0c793ce57a5f1cad6072bd5338506be9b517537b
     # The release jobs read the release environment's secrets (the tap deploy
     # key, the WinGet token); a called workflow sees no secrets unless passed.
     secrets: inherit
@@ -42,7 +42,7 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: leduftw/playbook/.github/actions/registry@3c889e9bb61eb8b3e889b862145b9c2c0ec2769f
+      - uses: leduftw/playbook/.github/actions/registry@0c793ce57a5f1cad6072bd5338506be9b517537b
         with:
           sha: ${{ needs.playbook.outputs.sha }}
-          playbook-ref: 3c889e9bb61eb8b3e889b862145b9c2c0ec2769f
+          playbook-ref: 0c793ce57a5f1cad6072bd5338506be9b517537b
