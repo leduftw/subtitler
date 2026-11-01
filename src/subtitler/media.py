@@ -9,6 +9,17 @@ from pathlib import Path
 from .errors import UsageError, UserFacingError
 
 
+def run_tool(command: list[str]) -> subprocess.CompletedProcess[str]:
+    """Run ffmpeg or ffprobe, whose text is UTF-8 wherever it runs.
+
+    Python would otherwise decode it with the local code page on Windows and
+    fail on a file name that page can't hold.
+    """
+    return subprocess.run(
+        command, encoding="utf-8", errors="replace", capture_output=True, check=False
+    )
+
+
 def ensure_tool(name: str) -> None:
     """Raise if a required command-line tool is not on PATH."""
     if shutil.which(name) is None:
@@ -43,7 +54,7 @@ def probe_duration_seconds(path: Path) -> float | None:
         "default=noprint_wrappers=1:nokey=1",
         str(path),
     ]
-    result = subprocess.run(command, text=True, capture_output=True, check=False)
+    result = run_tool(command)
     if result.returncode != 0:
         return None
     try:
@@ -87,7 +98,7 @@ def extract_audio(
         *codec_args,
         str(audio_path),
     ]
-    result = subprocess.run(command, text=True, capture_output=True, check=False)
+    result = run_tool(command)
     if result.returncode != 0:
         stderr = result.stderr.strip() or "ffmpeg failed without stderr output"
         raise UserFacingError(f"could not extract audio: {stderr}")

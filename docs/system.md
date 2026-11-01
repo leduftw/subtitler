@@ -185,7 +185,7 @@ The important knobs for transcription accuracy are:
 If accuracy is poor, first try:
 
 ```sh
-./subtitler input.mp4 --language en --audio-bitrate 96k --keep-audio --work-dir .work
+subtitler input.mp4 --language en --audio-bitrate 96k --keep-audio --work-dir .work
 ```
 
 If the audio file exceeds the upload limit, reduce bitrate or implement chunking.
@@ -207,12 +207,24 @@ Whisper Large v3       4.1%
 - **`gpt-4o-transcribe-diarize`** is the only OpenAI model that could return speakers; it accepts up to four `known_speaker_references` (2–10s audio clips), which would let cues carry real names rather than numbers. Its segment-only timing rules it out today (see Why not OpenAI), but if OpenAI adds word timestamps it becomes interesting again.
 - **Named speakers** are the clearest gap in the current output. Scribe has a speaker library and role detection; neither is wired up here.
 
+## Distribution
+
+Releases follow [leduftw/playbook](https://github.com/leduftw/playbook): `playbook release` opens a PR that sets the version in `pyproject.toml` and `__version__`, and landing it publishes everything below. Nothing about a release is edited by hand.
+
+- **Standalone programs** for macOS, Linux and Windows, each for Arm and Intel/AMD, built with PyInstaller as single files. The bundler runs only in the release build, so subtitler keeps zero runtime dependencies. These programs feed Homebrew, WinGet and the one-line installers, so someone on those channels needs no Python.
+- **PyPI**, as `leduftw-subtitler`, because `subtitler` belongs to an unrelated project. There the machine's own Python runs the code. The command is `subtitler` on every channel.
+
+Three things follow from that:
+
+- A standalone program can't see the repository, so anything subtitler reads at run time has to be package data listed in `pyproject.toml`. `translation_guide.md` is, which is what lets an installed copy print the translation instructions. The repo's `translate-subtitles` skill only points at them, so there is one copy to keep right.
+- `subtitler update` tells its channel from where it's running: the standalone program's own path, or, for the code run by a Python, the environment around it, where uv and pipx each leave a file of their own. A clone refuses, because `git pull` is its update.
+- The playbook's build adds a small startup hook to every standalone program, so it finds the certificates of the machine it runs on and keeps its bundled libraries away from `ffmpeg`. `scripts/smoke-standalone.sh` proves both on every release.
+
 ## Current Limitations
 
 - Uses the first audio track only.
 - Speaker ids are anonymous (`- ` turn markers, not names). Naming would need reference audio, which only the OpenAI diarize model currently accepts.
 - Diarization quality degrades on overlapping speech — an industry-wide hard problem, not an Azure-specific one.
-- No translation yet.
 - No chunking yet; long or high-bitrate files can exceed the provider upload limit.
 - No subtitle editing UI.
 - No automatic QA beyond producing SRT and relying on manual review.
@@ -223,11 +235,14 @@ The code is a small package under `src/subtitler/`, split by responsibility:
 
 ```text
 cli.py        argument parsing and main() dispatch
+update.py     `subtitler update`: find the install channel, update through it
 config.py     RunConfig dataclass and argument resolution
 pipeline.py   run(): probe -> extract audio -> transcribe -> render -> write SRT
 media.py      ffmpeg/ffprobe and filesystem preconditions
 srt.py        the Cue type, SRT rendering, line wrapping, cue grouping
 align.py      merge a transcript's wording onto external word timings + speakers
+translate.py  translation worksheets: emit, apply, and the guide
+translation_guide.md  the instructions an agent follows; printed by --translation-guide
 errors.py     UserFacingError (exit 1) and UsageError (exit 2)
 providers/
   base.py            ProviderSpec + TranscriptionProvider abstraction

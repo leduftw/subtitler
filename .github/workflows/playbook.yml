@@ -30,3 +30,19 @@ jobs:
       pull-requests: write
       id-token: write
       attestations: write
+
+  registry:
+    needs: playbook
+    # Runs even when another channel failed, so one broken channel can't
+    # hold back the registry.
+    if: ${{ !cancelled() && needs.playbook.outputs.released == 'true' }}
+    runs-on: ubuntu-24.04
+    environment: release
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: leduftw/playbook/.github/actions/registry@v1
+        with:
+          sha: ${{ needs.playbook.outputs.sha }}
+          playbook-ref: v1

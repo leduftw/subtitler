@@ -1,5 +1,8 @@
 # subtitler
 
+[![CI](https://github.com/leduftw/subtitler/actions/workflows/playbook.yml/badge.svg)](https://github.com/leduftw/subtitler/actions/workflows/playbook.yml)
+[![Latest release](https://img.shields.io/github/v/release/leduftw/subtitler)](https://github.com/leduftw/subtitler/releases/latest)
+
 Subtitles for any video, in any language.
 
 Point it at a video or audio file and it writes an `.srt`: who said what, when
@@ -7,33 +10,98 @@ they said it, and — if you ask — translated into whatever language you need.
 
 It works two ways. Run it yourself as a command, or just ask a coding agent
 (Claude Code, Codex, or similar) to do it for you — *"make me English subtitles
-for this film"* is enough. The agent reads this README, runs the commands, and
-handles the translation stage itself. You don't have to know what an SRT is.
+for this film"* is enough. The agent runs the commands and handles the translation
+stage itself. You don't have to know what an SRT is.
 
 Under the hood: local `ffmpeg` extracts a clean speech track, that audio (and only
 that audio — never the video) goes to a transcription provider, and the result is
-assembled into subtitles locally. No UI, no database, no background service, and
-no dependencies beyond the Python standard library.
+assembled into subtitles locally. No UI, no database, no background service.
 
-## Requirements
+## Install
 
-- Python 3.10+
-- `ffmpeg` and `ffprobe` on `PATH`
+```sh
+brew install leduftw/tap/subtitler   # Homebrew on macOS or Linux; brings ffmpeg along
+winget install leduftw.subtitler     # Windows
+uv tool install leduftw-subtitler    # PyPI, with Python 3.10 or newer
+```
+
+`pipx install leduftw-subtitler` and `pip install leduftw-subtitler` work too. On
+PyPI the package has a longer name because `subtitler` belongs to an unrelated
+project; the command is `subtitler` either way.
+
+Each release is submitted to Microsoft's moderated WinGet repository, so a new
+version can take a while to appear there.
+
+Or use the one-line installer, which picks the build for your machine, checks it
+against the release's `SHA256SUMS` and installs it without `sudo`:
+
+```sh
+curl -fsSL https://github.com/leduftw/subtitler/releases/latest/download/subtitler-installer.sh | sh
+```
+
+```powershell
+irm https://github.com/leduftw/subtitler/releases/latest/download/subtitler-installer.ps1 | iex
+```
+
+Set `SUBTITLER_VERSION` to install a specific version or `SUBTITLER_INSTALL_DIR` to
+choose the destination. If the destination isn't on `PATH`, the installer prints the
+line to add.
+
+Every release also ships standalone programs for macOS, Linux and Windows, each for
+both Arm and Intel/AMD chips, with stable names such as `subtitler-macos-arm64.zip`.
+They carry their own Python. Grab the archive for your platform from the
+[latest release](https://github.com/leduftw/subtitler/releases/latest), extract it,
+and run `subtitler`. A standalone program unpacks itself each time it starts, which
+takes a couple of seconds on a Mac. If macOS Gatekeeper blocks a browser-downloaded
+program, clear the quarantine flag with `xattr -d com.apple.quarantine subtitler`.
+
+### Requirements
+
+- `ffmpeg` and `ffprobe` on `PATH`. Homebrew installs them for you; elsewhere, use
+  `winget install Gyan.FFmpeg` on Windows or your system's package manager on Linux.
 - `AZURE_SPEECH_ENDPOINT` and `AZURE_SPEECH_API_KEY` for the Azure providers (`azure-fast`, `azure-hybrid`)
 - `ELEVENLABS_API_KEY` for `scribe`
 
-## Command line
+### Updating
 
-`./subtitler --help` lists every option, and `./subtitler --version` (or `-V`)
-prints the version. Run with no arguments at all, it prints the same help and
-what it needs: a video or audio file. The help is colored only in a terminal;
-`--no-color`, `NO_COLOR` or `TERM=dumb` turn the colors off.
+`subtitler update` (or `upgrade`) checks for a newer release and installs it the same
+way subtitler was installed: `brew upgrade leduftw/tap/subtitler` for Homebrew,
+`winget upgrade --id leduftw.subtitler` for WinGet, `uv tool upgrade`, `pipx upgrade`
+or `pip install --upgrade` for PyPI, and the one-line installer again, into the same
+folder, for everything else. A new version reaches WinGet only after Microsoft's
+review, so until it does, `subtitler update` says the release isn't on WinGet yet.
+A clone isn't updated this way; use `git pull` instead.
+
+### Run from a clone
+
+With Python 3.10 or newer, no install step and no dependencies:
+
+```sh
+git clone https://github.com/leduftw/subtitler.git
+cd subtitler
+./subtitler --help
+```
+
+That launcher is a shell script. In PowerShell or `cmd`, run `pip install .` from the
+clone instead, which gives you the `subtitler` command.
+
+## Usage
+
+### Command line
+
+`subtitler --help` (or `-h`, or `help`) lists every option, and `subtitler --version`
+(or `-V`, or `version`) prints the version. Run with no arguments at all, it prints
+the same help and what it needs: a video or audio file. The help is colored only in
+a terminal; `--no-color`, `NO_COLOR` or `TERM=dumb` turn the colors off.
+
+`help`, `version`, `update` and `upgrade` are commands when they come first. To read
+a file with one of those names, write `./help`.
 
 A mistake on the command line, such as an unknown option or a file that isn't
 there, exits 2. A failure while running, such as a missing `ffmpeg` or a
 provider error, exits 1.
 
-## Providers
+### Providers
 
 Every provider produces word-level timing and speaker labels in sync with the audio.
 
@@ -49,7 +117,7 @@ accurate: it tops the independent
 at 2.2% WER, against MAI's 2.4%. Use the Azure providers when you have no
 ElevenLabs account, or for locales Scribe doesn't cover.
 
-## Speaker labels (diarization)
+### Speaker labels (diarization)
 
 Without speaker separation, an interruption collapses into nonsense — one person
 says "Sorry, I…" and the other cuts in with "You don't need to apologize", and
@@ -74,10 +142,10 @@ no prefixes at all, so there's nothing to lose.
 
 ```sh
 # Turn it off:
-./subtitler "video.mp4" --provider azure-fast --no-diarize
+subtitler "video.mp4" --provider azure-fast --no-diarize
 
 # Raise or lower the speaker ceiling (2-35, default 8):
-./subtitler "video.mp4" --provider azure-fast --max-speakers 2
+subtitler "video.mp4" --provider azure-fast --max-speakers 2
 ```
 
 `--max-speakers 2` is worth setting for a two-person interview: a tighter bound
@@ -87,12 +155,12 @@ Diarization is not perfect. Where Azure gives both sides of an interruption the
 same speaker id, the two still share one subtitle — expect a handful of these per
 recording.
 
-## Scribe Quick Start
+### Scribe Quick Start
 
 ```sh
 export ELEVENLABS_API_KEY="..."
 
-./subtitler \
+subtitler \
   --provider scribe \
   "video.mp4" \
   --language en \
@@ -102,21 +170,21 @@ export ELEVENLABS_API_KEY="..."
 Scribe can also tag non-speech sounds, which is useful for accessibility subtitles:
 
 ```sh
-./subtitler --provider scribe "video.mp4" --tag-audio-events
+subtitler --provider scribe "video.mp4" --tag-audio-events
 # ... produces cues like "(laughter)" and "(footsteps)"
 ```
 
 For a dry run that extracts audio but calls no API:
 
 ```sh
-./subtitler \
+subtitler \
   "video.mp4" \
   --language en \
   --output "video.en.srt" \
   --dry-run
 ```
 
-## Azure Quick Start
+### Azure Quick Start
 
 The Azure providers need an Azure Speech resource. With the
 [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli)
@@ -146,7 +214,7 @@ export AZURE_SPEECH_API_KEY="$(az cognitiveservices account keys list \
 # Sanity check (should print https://<resource>.cognitiveservices.azure.com/).
 echo "$AZURE_SPEECH_ENDPOINT"
 
-./subtitler \
+subtitler \
   --provider azure-fast \
   "video.mp4" \
   --language en \
@@ -156,14 +224,14 @@ echo "$AZURE_SPEECH_ENDPOINT"
 Azure accepts large uploads (500 MiB for `azure-fast`, 300 MiB for `azure-hybrid`):
 
 ```sh
-./subtitler \
+subtitler \
   --provider azure-fast \
   "video.mp4" \
   --audio-bitrate 48k \
   --output "video.srt"
 ```
 
-### Best wording Azure can give: `azure-hybrid`
+#### Best wording Azure can give: `azure-hybrid`
 
 MAI-Transcribe-1.5 is Azure's LLM transcription mode, and it writes cleaner text
 than plain fast transcription does. But Azure returns only coarse timing for it
@@ -181,14 +249,14 @@ costs a third as much. Reach for `azure-hybrid` when you're staying on Azure and
 `azure-fast`'s wording isn't good enough.
 
 ```sh
-./subtitler \
+subtitler \
   --provider azure-hybrid \
   "video.mp4" \
   --language en \
   --output "video.en.srt"
 ```
 
-### Languages MAI doesn't cover
+#### Languages MAI doesn't cover
 
 MAI supports 43 languages; for anything outside that set, `azure-hybrid`
 auto-detects and often produces wrong-language or mistimed output.
@@ -197,23 +265,23 @@ auto-detects and often produces wrong-language or mistimed output.
 option:
 
 ```sh
-./subtitler "video.mp4" --language es --output "video.es.srt"
+subtitler "video.mp4" --language es --output "video.es.srt"
 ```
 
 `azure-fast` also covers many more locales than MAI, but wants a BCP-47 region
 code (`es-ES`, `en-US`); bare codes like `es` are mapped for you:
 
 ```sh
-./subtitler \
+subtitler \
   --provider azure-fast \
   "video.mp4" \
   --language es-ES \
   --output "video.es.srt"
 ```
 
-Run `./subtitler --provider <name> --list-languages` for a provider's set.
+Run `subtitler --provider <name> --list-languages` for a provider's set.
 
-## Translating subtitles
+### Translating subtitles
 
 Transcription and translation are separate stages. No speech provider offers
 translation *and* word-level timing *and* speakers in one call — Azure's LLM
@@ -228,14 +296,14 @@ line so the result reassembles onto the original timings.
 
 ```sh
 # 1. Write the worksheet
-./subtitler film.es.srt \
+subtitler film.es.srt \
   --language es --target-language en \
   --emit-worksheet work.txt
 
 # 2. Translate the numbered lines in work.txt (see below)
 
 # 3. Rebuild the subtitles on the original timings
-./subtitler film.es.srt \
+subtitler film.es.srt \
   --apply-worksheet work.txt \
   --target-language en \
   -o film.en.srt
@@ -245,10 +313,12 @@ Step 3 validates the numbering and refuses a worksheet that doesn't line up — 
 single missing line would shift every later subtitle onto the wrong timestamp.
 
 **There is no translation engine, by design.** Step 2 is done by the agent
-itself, working through the worksheet directly — the
-`.claude/skills/translate-subtitles` skill carries the instructions for doing it
-well. Machine translation flattens the register of ordinary speech; an agent that
-can read the whole scene keeps the slang, the tone and the interruptions intact.
+itself, working through the worksheet directly. `subtitler --translation-guide`
+prints the instructions for doing it well, and the worksheet and `--help` both point
+an agent at them, so any agent can follow them on an installed copy. In a clone,
+the `.claude/skills/translate-subtitles` skill hands Claude Code the same guide.
+Machine translation flattens the register of ordinary speech; an agent that can read
+the whole scene keeps the slang, the tone and the interruptions intact.
 
 The practical consequence: a translated file can't be regenerated by rerunning
 the tool. Keep the worksheet if the translation was expensive to produce.
@@ -256,24 +326,27 @@ the tool. Keep the worksheet if the translation was expensive to produce.
 If you are driving this through an agent, you don't need to run any of the above
 by hand — ask for the language you want and it will do all three steps.
 
-## Notes
+### Notes
 
 - Pass `--output` to say where the `.srt` goes. Without it, the run writes to `outputs/<input-stem>.<language-or-auto>.srt` under the current directory, creating that directory if needed.
 - Default audio extraction is mono speech audio at `16 kHz` and `48k`, MP3. Diarization requires mono, which is what the pipeline already extracts.
 - For very long files, lower `--audio-bitrate` to stay under the provider upload limit.
 - Use `--language` when you know it; it improves accuracy and reduces language-detection ambiguity.
-- Language hints use short codes. English is `en`, German is `de`, Spanish is `es`. Run `./subtitler --list-languages` for the full supported language/code list.
-- `azure-hybrid` inherits MAI's 43-language list, which is shorter than Whisper's. If you pass a `--language` it doesn't list, `subtitler` drops the hint and lets Azure auto-detect; run `./subtitler --provider azure-hybrid --list-languages` to see its set.
+- Language hints use short codes. English is `en`, German is `de`, Spanish is `es`. Run `subtitler --list-languages` for the full supported language/code list.
+- `azure-hybrid` inherits MAI's 43-language list, which is shorter than Whisper's. If you pass a `--language` it doesn't list, `subtitler` drops the hint and lets Azure auto-detect; run `subtitler --provider azure-hybrid --list-languages` to see its set.
 - OpenAI is deliberately not supported. `whisper-1` is legacy (removed 2027-01-20), its replacement `gpt-transcribe` returns no timestamps at all, and `gpt-4o-transcribe-diarize` returns only speaker-turn segments — measured on a 3-minute clip, 7 of its 91 segments ran over 6 seconds with no word timings to split them. None of the three can produce well-timed subtitles.
 
-## Tests
+## Development
 
-Standard library only, no test dependencies:
+subtitler is plain Python with no dependencies beyond the standard library, and
+neither do its tests:
 
 ```sh
 python3 -m unittest discover tests
 ```
 
-## Documentation
+See [docs/system.md](https://github.com/leduftw/subtitler/blob/main/docs/system.md) for the architecture and implementation details.
 
-See [docs/system.md](docs/system.md) for the architecture and implementation details.
+## License
+
+[MIT](https://github.com/leduftw/subtitler/blob/main/LICENSE)

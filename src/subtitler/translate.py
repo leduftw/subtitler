@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from importlib import resources
 from pathlib import Path
 
 from .errors import UsageError, UserFacingError
@@ -61,6 +62,8 @@ _INSTRUCTIONS = """\
 #   - A line may end mid-sentence. That is expected — do not "complete" it.
 #   - Keep any leading "- " (it marks a change of speaker).
 #   - Leave [SPEAKER] and timestamp headers untouched; they are context for you.
+#
+# The full instructions: subtitler --translation-guide
 """
 
 
@@ -163,6 +166,12 @@ def apply_worksheet(worksheet: str, cues: list[Cue]) -> list[Cue]:
     return rebuilt
 
 
+def translation_guide() -> str:
+    """The instructions an agent follows to translate well, shipped with every install."""
+    guide = resources.files(__package__).joinpath("translation_guide.md")
+    return guide.read_text(encoding="utf-8")
+
+
 # --- File-level entry points used by the CLI -----------------------------------
 
 
@@ -192,7 +201,8 @@ def emit_worksheet_file(
         f"Wrote worksheet: {worksheet_path} ({len(cues)} lines in {turns} speaker turns)"
     )
     print(
-        f"Translate the numbered lines into {target_language}, then rerun with --apply-worksheet."
+        f"Translate the numbered lines into {target_language}, then rerun with --apply-worksheet. "
+        "subtitler --translation-guide says how to do it well."
     )
     return 0
 
