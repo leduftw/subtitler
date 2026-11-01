@@ -82,6 +82,9 @@ cd subtitler
 ./subtitler --help
 ```
 
+That launcher is a shell script. In PowerShell or `cmd`, run `pip install .` from the
+clone instead, which gives you the `subtitler` command.
+
 ## Usage
 
 ### Command line
@@ -342,8 +345,8 @@ neither do its tests:
 python3 -m unittest discover tests
 ```
 
-See [docs/system.md](docs/system.md) for the architecture and implementation details.
+See [docs/system.md](https://github.com/leduftw/subtitler/blob/main/docs/system.md) for the architecture and implementation details.
 
 ## License
 
-[MIT](LICENSE)
+[MIT](https://github.com/leduftw/subtitler/blob/main/LICENSE)
