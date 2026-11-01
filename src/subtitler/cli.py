@@ -31,6 +31,16 @@ MISSING_INPUT = "To make subtitles, pass a video or audio file: subtitler <file>
 # a file. Writing ./help reaches a file with that name.
 COMMANDS = ("help", "version", "update", "upgrade")
 
+# What each command does, in its own help and in the list in the main help.
+HELP_SUMMARY = "Show the help, or the help of one command."
+VERSION_SUMMARY = "Show the version and exit."
+UPDATE_SUMMARY = (
+    "Update subtitler to the latest release, the same way it was installed."
+)
+
+# argparse's own usage runs to 15 lines of options and can't show a command.
+USAGE = "%(prog)s [options] [input]\n       %(prog)s <command>"
+
 
 class ArgumentParser(argparse.ArgumentParser):
     def _print_message(self, message: str | None, file=None) -> None:
@@ -198,19 +208,11 @@ def build_command_parser(color: bool = True) -> ArgumentParser:
     """The parser behind COMMANDS, used only when a command line starts with one."""
     parser = ArgumentParser(prog="subtitler", add_help=False, **parser_style(color))
     commands = parser.add_subparsers(dest="command", required=True)
-    show_help = commands.add_parser(
-        "help", description="Show the help, or the help of one command."
-    )
+    show_help = commands.add_parser("help", description=HELP_SUMMARY)
     show_help.add_argument("topic", nargs="?", choices=COMMANDS, metavar="command")
-    show_version = commands.add_parser(
-        "version", description="Show the version and exit."
-    )
+    show_version = commands.add_parser("version", description=VERSION_SUMMARY)
     updater = commands.add_parser(
-        "update",
-        aliases=["upgrade"],
-        description=(
-            "Update subtitler to the latest release, the same way it was installed."
-        ),
+        "update", aliases=["upgrade"], description=UPDATE_SUMMARY
     )
     for command in (show_help, show_version, updater):
         command.add_argument(
@@ -221,9 +223,26 @@ def build_command_parser(color: bool = True) -> ArgumentParser:
     return parser
 
 
+def list_commands(parser: ArgumentParser) -> None:
+    """Show the commands first in the help, in rows like the options.
+
+    This parser can't hold them, because its first argument can be any file name,
+    so these rows only print: the commands themselves are in build_command_parser.
+    """
+    group = parser.add_argument_group("commands")
+    for row, summary in (
+        ("help [command]", HELP_SUMMARY),
+        ("version", VERSION_SUMMARY),
+        ("update, upgrade", UPDATE_SUMMARY),
+    ):
+        group._group_actions.append(argparse.Action([], row, metavar=row, help=summary))
+    parser._action_groups.insert(0, parser._action_groups.pop())
+
+
 def build_parser(color: bool = True) -> ArgumentParser:
     parser = ArgumentParser(
         prog="subtitler",
+        usage=USAGE,
         description=DESCRIPTION,
         epilog=(
             "Language hints use short codes such as en=English, de=German, es=Spanish. "
@@ -231,13 +250,13 @@ def build_parser(color: bool = True) -> ArgumentParser:
         ),
         **parser_style(color),
     )
-    parser.add_argument_group(
-        "commands",
-        "subtitler help [command] and subtitler version work like --help and --version, "
-        "and subtitler update (or upgrade) moves to the latest release. To read a file "
-        "with one of these names, write ./help.",
+    list_commands(parser)
+    parser.add_argument(
+        "input",
+        nargs="?",
+        help="Input video or audio file. To read a file named like a command, "
+        "write ./help.",
     )
-    parser.add_argument("input", nargs="?", help="Input video or audio file.")
     parser.add_argument(
         "-V",
         "--version",

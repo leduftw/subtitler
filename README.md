@@ -89,7 +89,7 @@ clone instead, which gives you the `subtitler` command.
 
 ### Command line
 
-`subtitler --help` (or `-h`, or `help`) lists every option, and `subtitler --version`
+`subtitler --help` (or `-h`, or `help`) lists every command and option, and `subtitler --version`
 (or `-V`, or `version`) prints the version. Run with no arguments at all, it prints
 the same help and what it needs: a video or audio file. The help is colored only in
 a terminal; `--no-color`, `NO_COLOR` or `TERM=dumb` turn the colors off.

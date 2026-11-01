@@ -72,6 +72,34 @@ class HelpTest(unittest.TestCase):
     def test_help_says_how_to_reach_a_file_named_like_a_command(self) -> None:
         self.assertIn("./help", run("--help")[1])
 
+    def test_the_usage_shows_how_to_run_a_command(self) -> None:
+        usage = run("--help")[1].partition("\n\n")[0]
+        self.assertIn("usage: subtitler [options] [input]", usage)
+        self.assertIn("subtitler <command>", usage)
+
+    def test_a_mistake_prints_the_same_short_usage(self) -> None:
+        err = run("--bogus-option")[2]
+        self.assertIn("subtitler <command>", err)
+        self.assertLessEqual(len(err.splitlines()), 3)
+
+    def test_help_lists_every_command_before_the_options(self) -> None:
+        out = run("--help")[1]
+        self.assertLess(out.index("commands:"), out.index("positional arguments:"))
+        self.assertLess(out.index("positional arguments:"), out.index("options:"))
+        listed = out.split("commands:\n")[1].split("\n\n")[0]
+        rows = [line.split()[0].rstrip(",") for line in listed.splitlines()]
+        self.assertEqual(rows[:2], ["help", "version"])
+        for word in cli.COMMANDS:
+            with self.subTest(word=word):
+                self.assertIn(word, listed)
+
+    def test_the_list_describes_each_command_as_its_own_help_does(self) -> None:
+        listed = " ".join(run("--help")[1].split())
+        for word in ("help", "version", "update"):
+            with self.subTest(word=word):
+                summary = run(word, "--help")[1].split("\n\n")[1]
+                self.assertIn(" ".join(summary.split()), listed)
+
     def test_help_of_one_command(self) -> None:
         for argv in (("help", "update"), ("help", "upgrade"), ("update", "--help")):
             with self.subTest(argv=argv):
