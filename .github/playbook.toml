@@ -7,7 +7,10 @@ stack = "python"
 
 [release]
 stack = "python"
-channels = ["homebrew", "winget", "installers", "pypi"]
+# WinGet is out until microsoft/winget-pkgs#468156 is merged, because a release
+# after 1.0.0 can't pass its checks before that. Then put "winget" back after
+# "homebrew" and run: gh workflow run playbook.yml --ref main
+channels = ["homebrew", "installers", "pypi"]
 
 [release.smoke]
 all = [
