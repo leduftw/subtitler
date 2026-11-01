@@ -1,6 +1,6 @@
 # Managed by leduftw/playbook v1. Change it there, not here:
 # https://github.com/leduftw/playbook
-name: playbook
+name: CI
 
 on:
   push:
@@ -17,9 +17,9 @@ permissions:
 
 jobs:
   playbook:
-    uses: leduftw/playbook/.github/workflows/pipeline.yml@6499a5e6c2336e55ddb4a22b429d439078b5d5b1
+    uses: leduftw/playbook/.github/workflows/pipeline.yml@a0aa262181a76680693b9bb9ecb45aac12157192
     with:
-      playbook-ref: 6499a5e6c2336e55ddb4a22b429d439078b5d5b1
+      playbook-ref: a0aa262181a76680693b9bb9ecb45aac12157192
     # The release jobs read the release environment's secrets (the tap deploy
     # key, the WinGet token); a called workflow sees no secrets unless passed.
     secrets: inherit
@@ -42,7 +42,7 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: leduftw/playbook/.github/actions/registry@6499a5e6c2336e55ddb4a22b429d439078b5d5b1
+      - uses: leduftw/playbook/.github/actions/registry@a0aa262181a76680693b9bb9ecb45aac12157192
         with:
           sha: ${{ needs.playbook.outputs.sha }}
-          playbook-ref: 6499a5e6c2336e55ddb4a22b429d439078b5d5b1
+          playbook-ref: a0aa262181a76680693b9bb9ecb45aac12157192

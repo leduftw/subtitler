@@ -57,7 +57,7 @@ class HelpTest(unittest.TestCase):
         self.assertEqual(run("-h"), (0, expected, ""))
 
     def test_the_description_is_the_repos_description(self) -> None:
-        self.assertIn("\nsubtitles for any video, in any language\n", run("--help")[1])
+        self.assertIn("\nSubtitles for any video, in any language.\n", run("--help")[1])
 
     def test_a_bare_run_prints_the_help_and_whats_missing(self) -> None:
         # Nothing to subtitle is not a failure: WinGet-style checks start tools bare.
