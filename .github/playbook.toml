@@ -10,9 +10,13 @@ stack = "python"
 channels = ["homebrew", "winget", "installers", "pypi"]
 
 [release.smoke]
-# update reaches GitHub, so a program that can't find certificates says so here.
-# It can't tell anything else: this version usually isn't out yet.
-all = ["! {bin} update 2>&1 | grep -i certificate"]
+all = [
+  # update reaches GitHub, so a program that can't find certificates says so here.
+  # It can't tell anything else: this version usually isn't out yet.
+  "! {bin} update 2>&1 | grep -i certificate",
+  # The guide is a data file, which the program has to bring along.
+  "{bin} --translation-guide | grep -q 'Translating subtitles'",
+]
 unix = ["scripts/smoke-standalone.sh {bin}"]
 
 [release.homebrew]
