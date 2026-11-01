@@ -32,11 +32,10 @@ MISSING_INPUT = "To make subtitles, pass a video or audio file: subtitler <file>
 COMMANDS = ("help", "version", "update", "upgrade")
 
 # What each command does, in its own help and in the list in the main help.
-HELP_SUMMARY = "Show the help, or the help of one command."
-VERSION_SUMMARY = "Show the version and exit."
-UPDATE_SUMMARY = (
-    "Update subtitler to the latest release, the same way it was installed."
-)
+# dbird and monad use the same words, so keep them in step.
+UPDATE_SUMMARY = "Update subtitler to the latest release"
+VERSION_SUMMARY = "Print the version"
+HELP_SUMMARY = "Show this help, or the help of one command"
 
 # argparse's own usage runs to 15 lines of options and can't show a command.
 USAGE = "%(prog)s [options] [input]\n       %(prog)s <command>"
@@ -230,12 +229,14 @@ def list_commands(parser: ArgumentParser) -> None:
     so these rows only print: the commands themselves are in build_command_parser.
     """
     group = parser.add_argument_group("commands")
-    for row, summary in (
-        ("help [command]", HELP_SUMMARY),
+    for name, summary in (
+        ("update", UPDATE_SUMMARY),
         ("version", VERSION_SUMMARY),
-        ("update, upgrade", UPDATE_SUMMARY),
+        ("help", HELP_SUMMARY),
     ):
-        group._group_actions.append(argparse.Action([], row, metavar=row, help=summary))
+        group._group_actions.append(
+            argparse.Action([], name, metavar=name, help=summary)
+        )
     parser._action_groups.insert(0, parser._action_groups.pop())
 
 
