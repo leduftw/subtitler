@@ -211,7 +211,7 @@ Whisper Large v3       4.1%
 
 Releases follow [leduftw/playbook](https://github.com/leduftw/playbook): `playbook release` opens a PR that sets the version in `pyproject.toml` and `__version__`, and landing it publishes everything below. Nothing about a release is edited by hand.
 
-- **Standalone programs** for macOS, Linux and Windows, each for Arm and Intel/AMD, built with PyInstaller as single files. The bundler runs only in the release build, so subtitler keeps zero runtime dependencies. These programs feed Homebrew, WinGet and the one-line installers, so someone on those channels needs no Python.
+- **Standalone programs** for macOS, Linux and Windows, each for Arm and Intel/AMD, built with PyInstaller, each a program with a `subtitler-runtime-<version>` folder of Python and its libraries beside it. A single file would unpack those on every start, and macOS checks each new file, which costs seconds every time; files that stay put are checked once. The bundler runs only in the release build, so subtitler keeps zero runtime dependencies. These programs feed Homebrew, WinGet and the one-line installers, so someone on those channels needs no Python.
 - **PyPI**, as `leduftw-subtitler`, because `subtitler` belongs to an unrelated project. There the machine's own Python runs the code. The command is `subtitler` on every channel.
 
 Three things follow from that:

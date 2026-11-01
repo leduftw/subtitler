@@ -20,7 +20,7 @@ STUB
 cat > "$work/ffmpeg" <<'STUB'
 #!/bin/sh
 case ${LD_LIBRARY_PATH:-} in
-  *_MEI*)
+  *subtitler-runtime-*)
     echo "ffmpeg inherited the bundled libraries: $LD_LIBRARY_PATH" >&2
     exit 1
     ;;
