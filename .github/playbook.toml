@@ -23,7 +23,7 @@ unix = ["scripts/smoke-standalone.sh {bin}"]
 desc = "Subtitles for any video, in any language"
 macos-dependencies = ["ffmpeg"]
 linux-dependencies = ["ffmpeg"]
-install = ['doc.install "LICENSE", "README.md", "PYTHON-LICENSE.txt"']
+install = ['doc.install "LICENSE", "README.md", "PYTHON-LICENSE.txt", "PYTHON-THIRD-PARTY-NOTICES.txt"']
 
 [release.installer]
 notes = ["subtitler also needs ffmpeg and an API key: https://github.com/leduftw/subtitler#install"]
