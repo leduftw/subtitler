@@ -1,6 +1,28 @@
 # Facts about subtitler for leduftw/playbook. Everything else comes from the playbook.
 name = "subtitler"
-published = false
+published = true
 
 [[check]]
 stack = "python"
+
+[release]
+stack = "python"
+channels = ["homebrew", "winget", "installers", "pypi"]
+
+[release.smoke]
+# update reaches GitHub, so a program that can't find certificates says so here.
+# It can't tell anything else: this version usually isn't out yet.
+all = ["! {bin} update 2>&1 | grep -i certificate"]
+unix = ["scripts/smoke-standalone.sh {bin}"]
+
+[release.homebrew]
+desc = "Subtitles for any video, in any language"
+macos-dependencies = ["ffmpeg"]
+linux-dependencies = ["ffmpeg"]
+install = ['doc.install "LICENSE", "README.md", "PYTHON-LICENSE.txt"']
+
+[release.installer]
+notes = ["subtitler also needs ffmpeg and an API key: https://github.com/leduftw/subtitler#install"]
+macos-notes = ["Install ffmpeg with: brew install ffmpeg"]
+linux-notes = ["Install ffmpeg with your package manager, such as: sudo apt install ffmpeg"]
+windows-notes = ["Install ffmpeg with: winget install Gyan.FFmpeg"]

@@ -18,6 +18,7 @@ from unittest import mock
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from subtitler import __version__, cli
+from subtitler.errors import UserFacingError
 
 
 def run(
@@ -63,17 +64,50 @@ class HelpTest(unittest.TestCase):
         help_text = run("--help")[1]
         self.assertEqual(run(), (0, f"{help_text}\n{cli.MISSING_INPUT}\n", ""))
 
-    def test_help_is_not_a_word_here(self) -> None:
-        # The argument is a file, so `subtitler help` must mean a file called help.
-        code, out, err = run("help")
+    def test_the_help_word_prints_the_same_help(self) -> None:
+        expected = run("--help")[1]
+        self.assertEqual(run("help"), (0, expected, ""))
+        self.assertEqual(run("--no-color", "help"), (0, expected, ""))
+
+    def test_help_says_how_to_reach_a_file_named_like_a_command(self) -> None:
+        self.assertIn("./help", run("--help")[1])
+
+    def test_help_of_one_command(self) -> None:
+        for argv in (("help", "update"), ("help", "upgrade"), ("update", "--help")):
+            with self.subTest(argv=argv):
+                code, out, err = run(*argv)
+                self.assertEqual((code, err), (0, ""))
+                self.assertIn("usage: subtitler update", out)
+                self.assertIn("latest release", out)
+
+    def test_upgrade_is_the_same_command_as_update(self) -> None:
+        self.assertEqual(run("upgrade", "--help"), run("update", "--help"))
+
+    def test_update_has_help_of_its_own(self) -> None:
+        self.assertNotEqual(run("update", "--help")[1], run("--help")[1])
+
+    def test_an_unknown_command_after_help_is_a_mistake(self) -> None:
+        code, out, err = run("help", "bogus")
         self.assertEqual((code, out), (2, ""))
-        self.assertIn("input file does not exist", err)
+        self.assertIn("subtitler help: error:", err)
+
+    def test_a_mistake_on_a_command_exits_2(self) -> None:
+        code, out, err = run("update", "--bogus")
+        self.assertEqual((code, out), (2, ""))
+        self.assertIn("subtitler: error: unrecognized arguments: --bogus", err)
 
     def test_command_words_and_flags_can_still_be_input_filenames(self) -> None:
-        for name in ("help", "version", "update", "--no-color"):
-            argv = ["--", name] if name.startswith("--") else [name]
+        for argv, name in (
+            (["./help"], "help"),
+            (["./version"], "version"),
+            (["./update"], "update"),
+            (["./upgrade"], "upgrade"),
+            (["--", "help"], "help"),
+            (["--", "--no-color"], "--no-color"),
+            (["--provider", "scribe", "update"], "update"),
+        ):
             with (
-                self.subTest(name=name),
+                self.subTest(argv=argv),
                 mock.patch("subtitler.cli.run", return_value=0) as pipeline,
             ):
                 self.assertEqual(run(*argv), (0, "", ""))
@@ -84,10 +118,29 @@ class HelpTest(unittest.TestCase):
 
 
 class VersionTest(unittest.TestCase):
-    def test_both_version_flags_print_the_name_and_version(self) -> None:
-        for flag in ("-V", "--version"):
-            with self.subTest(flag=flag):
-                self.assertEqual(run(flag), (0, f"subtitler {__version__}\n", ""))
+    def test_every_form_prints_the_name_and_version(self) -> None:
+        for form in ("-V", "--version", "version"):
+            with self.subTest(form=form):
+                self.assertEqual(run(form), (0, f"subtitler {__version__}\n", ""))
+
+
+class UpdateCommandTest(unittest.TestCase):
+    def test_update_and_upgrade_run_the_update(self) -> None:
+        for word in ("update", "upgrade"):
+            with (
+                self.subTest(word=word),
+                mock.patch("subtitler.update.run", return_value=0) as update,
+            ):
+                self.assertEqual(run(word), (0, "", ""))
+                update.assert_called_once_with()
+
+    def test_a_failed_update_exits_1_with_a_message(self) -> None:
+        failure = UserFacingError("can't check the latest release: offline")
+        with mock.patch("subtitler.update.run", side_effect=failure):
+            self.assertEqual(
+                run("update"),
+                (1, "", "subtitler: can't check the latest release: offline\n"),
+            )
 
 
 class ExitCodeTest(unittest.TestCase):

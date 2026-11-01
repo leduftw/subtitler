@@ -3,8 +3,9 @@ requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "subtitler"
-version = "0.1.0"
+# "subtitler" on PyPI is an unrelated project. The command is still `subtitler`.
+name = "leduftw-subtitler"
+version = "0.0.0"
 description = "Subtitles for any video, in any language."
 readme = "README.md"
 license = "MIT"
@@ -12,8 +13,14 @@ license-files = ["LICENSE"]
 requires-python = ">=3.10"
 dependencies = []
 
+[project.urls]
+Homepage = "https://github.com/leduftw/subtitler"
+
 [project.scripts]
 subtitler = "subtitler.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+subtitler = ["translation_guide.md"]

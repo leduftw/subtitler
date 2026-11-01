@@ -20,7 +20,8 @@ python3 -m unittest discover tests
 
 The project has **zero runtime dependencies** and should stay that way — it uses
 `urllib`, `dataclasses`, `difflib`, and `argparse` rather than `requests`, `httpx`,
-or an SDK. Adding a dependency needs a real justification.
+or an SDK. Adding a dependency needs a real justification. PyInstaller doesn't count:
+it runs only in the release build.
 
 ## Architecture invariants
 
@@ -31,6 +32,16 @@ or an SDK. Adding a dependency needs a real justification.
 - A provider whose `SPEC` sets `internal=True` stays registered and reusable but is
   hidden from `--provider` choices (this is how `azure-mai` survives as
   `azure-hybrid`'s text pass without being user-selectable).
+- The translation instructions have one source, `src/subtitler/translation_guide.md`,
+  which ships with every install and prints with `--translation-guide`. The repo's
+  `translate-subtitles` skill only points at it. The guide can't assume a clone or a
+  Python, because a standalone install has neither.
+- Installed copies can't see the repository: a file read at run time must be package
+  data listed in `pyproject.toml`.
+- `help`, `version`, `update` and `upgrade` are commands only as the first word of a
+  command line, so `./help` still reaches a file. Adding a word takes that name from
+  people's files, so an action that needs no word of its own is a flag instead, like
+  `--list-languages` and `--translation-guide`.
 
 See `docs/system.md` for the full design.
 
@@ -69,8 +80,15 @@ A command-line tool here follows the [Command Line Interface Guidelines](https:/
 - Started with no arguments at all, the tool does its default job. If something that job needs isn't set up yet (a token, a terminal), it prints the help plus one line saying what's missing, and exits 0. An explicit command still fails when its requirements are missing; an existing config that can't be read is an error either way.
 - Help uses the colors of Python 3.14's `argparse`, only in a terminal, and none with `NO_COLOR`, `TERM=dumb` or `--no-color`.
 - Arguments are parsed by the language's standard parser (`argparse`, `clap`, `System.CommandLine`), never by hand.
+- `update` (alias `upgrade`) moves to the latest release through whatever installed the tool: `brew upgrade`, `winget upgrade`, `cargo install`, `dotnet tool update`, or the release's own installer.
+- Every release PR checks these rules against the real binaries on all six platforms, so a release that breaks them doesn't ship.
 
-### Publishing
+### Releasing
 
-This repo is local: nothing is released. If that changes, the playbook adds the release setup (`published = true` and a `[release]` table in `.github/playbook.toml`).
+This repo is published: other people install it.
+
+- `playbook release patch|minor|major` opens a PR that only bumps the version; nobody types a version number. The first release is always 1.0.0, and every later one is exactly the next patch, minor or major.
+- That PR builds and smoke-tests every release file on all six platforms. Landing it with `playbook finish` tags the release, publishes it on GitHub Releases and updates the Homebrew tap, WinGet, the one-line installers and PyPI.
+- A published release is locked. A broken one is never fixed in place; ship the next patch.
+- If a channel fails (an expired token, a WinGet outage), fix the cause, then run `gh workflow run playbook --ref main`. A manual run whose version matches the latest release updates only its channels, from the files already published.
 <!-- playbook:end -->

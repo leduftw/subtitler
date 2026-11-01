@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import argparse
+import itertools
 import os
 import re
 import sys
 from collections.abc import Iterable
 from pathlib import Path
 
-from . import __version__, providers, translate
+from . import __version__, providers, translate, update
 from .config import (
     DEFAULT_API_TIMEOUT_SECONDS,
     DEFAULT_AUDIO_BITRATE,
@@ -25,6 +26,10 @@ DESCRIPTION = "subtitles for any video, in any language"
 
 # What a bare `subtitler` adds after its help: the one thing it needs.
 MISSING_INPUT = "To make subtitles, pass a video or audio file: subtitler <file>"
+
+# The first word of a command line, when it's one of these, is a command and not
+# a file. Writing ./help reaches a file with that name.
+COMMANDS = ("help", "version", "update", "upgrade")
 
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -57,22 +62,51 @@ def no_color_requested(parser: ArgumentParser, options: list[str]) -> bool:
     return False
 
 
+def command_words(parser: ArgumentParser, argv: list[str]) -> list[str]:
+    """The command this command line starts with, if any; --no-color may come first."""
+    words = list(
+        itertools.dropwhile(lambda word: no_color_requested(parser, [word]), argv)
+    )
+    return words if words and words[0] in COMMANDS else []
+
+
+def keep_printing() -> None:
+    """Don't let a character the output can't show fail a run that has done its work.
+
+    On Windows a pipe can only hold the local code page, and a subtitle's file
+    name or a word in the guide can be outside it.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="replace")
+
+
 def main(argv: Iterable[str] | None = None) -> int:
     argv = sys.argv[1:] if argv is None else list(argv)
+    keep_printing()
     # --no-color decides how the help looks, and -h prints the help the moment
     # argparse reaches it, so the flag is read before parsing.
     options = argv[: argv.index("--")] if "--" in argv else argv
     parser = build_parser()
+    color = not no_color_requested(parser, options)
     # On Python before 3.14 this attribute is harmless and help stays plain.
-    parser.color = not no_color_requested(parser, options)
+    parser.color = color
     if not argv:
         # A bare `subtitler` has nothing to subtitle, so it shows how instead.
         parser.print_help()
         print(f"\n{MISSING_INPUT}")
         return 0
 
+    words = command_words(parser, argv)
+    if words:
+        return run_command(parser, build_command_parser(color), words)
+
     args = parser.parse_args(argv)
     try:
+        if args.translation_guide:
+            print(translate.translation_guide(), end="")
+            return 0
+
         if args.list_languages:
             providers.print_supported_languages(args.provider)
             return 0
@@ -85,6 +119,27 @@ def main(argv: Iterable[str] | None = None) -> int:
     except UsageError as exc:
         parser.error(str(exc))
     except (UserFacingError, OSError, UnicodeError) as exc:
+        print(f"subtitler: {exc}", file=sys.stderr)
+        return 1
+
+
+def run_command(
+    parser: ArgumentParser, commands: ArgumentParser, words: list[str]
+) -> int:
+    """Run help, version or update, each with a parser of its own."""
+    args = commands.parse_args(words)
+    if args.command == "help":
+        if not args.topic:
+            parser.print_help()
+            return 0
+        # argparse prints that command's help and exits.
+        commands.parse_args([args.topic, "--help"])
+    if args.command == "version":
+        print(f"subtitler {__version__}")
+        return 0
+    try:
+        return update.run()
+    except (UserFacingError, OSError) as exc:
         print(f"subtitler: {exc}", file=sys.stderr)
         return 1
 
@@ -131,14 +186,42 @@ def run_translation(args: argparse.Namespace) -> int:
     )
 
 
-def build_parser(color: bool = True) -> ArgumentParser:
+def parser_style(color: bool) -> dict[str, bool]:
     # argparse colors its help and suggests fixes for typos from Python 3.14 on;
     # older versions print plain text without suggestions.
-    modern = (
-        {"color": color, "suggest_on_error": True}
-        if sys.version_info >= (3, 14)
-        else {}
+    if sys.version_info >= (3, 14):
+        return {"color": color, "suggest_on_error": True}
+    return {}
+
+
+def build_command_parser(color: bool = True) -> ArgumentParser:
+    """The parser behind COMMANDS, used only when a command line starts with one."""
+    parser = ArgumentParser(prog="subtitler", add_help=False, **parser_style(color))
+    commands = parser.add_subparsers(dest="command", required=True)
+    show_help = commands.add_parser(
+        "help", description="Show the help, or the help of one command."
     )
+    show_help.add_argument("topic", nargs="?", choices=COMMANDS, metavar="command")
+    show_version = commands.add_parser(
+        "version", description="Show the version and exit."
+    )
+    updater = commands.add_parser(
+        "update",
+        aliases=["upgrade"],
+        description=(
+            "Update subtitler to the latest release, the same way it was installed."
+        ),
+    )
+    for command in (show_help, show_version, updater):
+        command.add_argument(
+            "--no-color",
+            action="store_true",
+            help="Print without colors, like NO_COLOR=1.",
+        )
+    return parser
+
+
+def build_parser(color: bool = True) -> ArgumentParser:
     parser = ArgumentParser(
         prog="subtitler",
         description=DESCRIPTION,
@@ -146,7 +229,13 @@ def build_parser(color: bool = True) -> ArgumentParser:
             "Language hints use short codes such as en=English, de=German, es=Spanish. "
             "Run `subtitler --list-languages` for the provider-specific language/code list."
         ),
-        **modern,
+        **parser_style(color),
+    )
+    parser.add_argument_group(
+        "commands",
+        "subtitler help [command] and subtitler version work like --help and --version, "
+        "and subtitler update (or upgrade) moves to the latest release. To read a file "
+        "with one of these names, write ./help.",
     )
     parser.add_argument("input", nargs="?", help="Input video or audio file.")
     parser.add_argument(
@@ -253,7 +342,13 @@ def build_parser(color: bool = True) -> ArgumentParser:
         "translation",
         "Translate an existing .srt into another language. Pass the .srt as the input "
         "file: --emit-worksheet writes the lines out for a translator, --apply-worksheet "
-        "reads them back and rebuilds the subtitles on the original timings.",
+        "reads them back and rebuilds the subtitles on the original timings. An agent "
+        "doing the translating should read --translation-guide first.",
+    )
+    translation.add_argument(
+        "--translation-guide",
+        action="store_true",
+        help="Print the instructions for translating subtitles well, then exit.",
     )
     translation.add_argument(
         "--emit-worksheet",
