@@ -1,0 +1,42 @@
+{
+  "v": 4,
+  "createdOnFiles": {"v": 1, "at": "2026-11-05T10:43:50Z"},
+  "lists": "css",
+  "title": "How subtitler works",
+  "cover": "cover",
+  "order": [
+    "cover",
+    "what",
+    "pipeline",
+    "run",
+    "cue",
+    "grouping",
+    "speakers",
+    "providers",
+    "registry",
+    "hybrid",
+    "align",
+    "translate",
+    "worksheet",
+    "cli",
+    "update",
+    "release",
+    "stdlib",
+    "limits",
+    "reading"
+  ],
+  "sections": {
+    "s1": {"description": "What subtitler does and the path one file takes", "start": "cover"},
+    "s2": {"description": "The cue model every provider reduces to", "start": "cue"},
+    "s3": {"description": "The providers, and how azure-hybrid aligns two passes", "start": "providers"},
+    "s4": {"description": "Translating subtitles without moving a timestamp", "start": "translate"},
+    "s5": {"description": "The command line, updates and releases", "start": "cli"},
+    "s6": {"description": "Dependencies, limits, and where to read the code", "start": "stdlib"}
+  },
+  "faces": {
+    "space-grotesk": {"family": "Space Grotesk", "href": "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap"},
+    "ibm-plex-sans": {"family": "IBM Plex Sans", "href": "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&display=swap"},
+    "jetbrains-mono": {"family": "JetBrains Mono", "href": "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap"}
+  },
+  "designSystems": []
+}

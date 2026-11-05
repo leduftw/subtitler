@@ -1,0 +1,29 @@
+<section id="worksheet" style="background:#F6F4EF;color:#1B2230;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:48px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-size:24px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:#2E6E9E">Translation</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:60px;font-weight:700;line-height:1.1;letter-spacing:-1px;color:#1B2230">The worksheet keeps every line’s number</h2>
+</div>
+<div style="display:flex;gap:64px;align-items:start">
+<div style="width:720px;display:flex;flex-direction:column;gap:16px">
+<div style="background:#1E2430;border-radius:16px;padding:40px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.5;color:#E6E1D6;white-space:nowrap"><span style="color:#A9B0BC"># subtitler worksheet v1</span><br><span style="color:#A9B0BC"># source: es&#160;&#160;&#160;&#160;target: en</span><br><span style="color:#A9B0BC"># (how to translate this file)</span><br><br><span style="color:#F2C14E">[?] 00:00:01,000</span><br>1| y gracias por venir a esta reunión que,<br>2| como ya saben, hemos aplazado<br>3| tres veces.<br><br><span style="color:#F2C14E">[?] 00:00:04,200</span><br>4| - ¿Tres veces?</p>
+</div>
+<p style="font-size:24px;line-height:1.4;color:#4A5363">[?] because an .srt carries no speaker ids: turns split at each “- ” instead.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:32px">
+<div style="display:flex;flex-direction:column;gap:8px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;line-height:1.2;color:#1B2230">Whole sentences</h3>
+<p style="font-size:28px;line-height:1.4;color:#4A5363">Lines are grouped into speaker turns, so the translator reads complete sentences, not fragments.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;line-height:1.2;color:#1B2230">Numbers carry the timing</h3>
+<p style="font-size:28px;line-height:1.4;color:#4A5363">--apply-worksheet refuses a missing, repeated or unknown number rather than shift every later subtitle.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;line-height:1.2;color:#1B2230">Turn marks survive</h3>
+<p style="font-size:28px;line-height:1.4;color:#4A5363">A leading “- ” stays in the translation, so the new file still marks each change of speaker.</p>
+</div>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5B6270">src/subtitler/translate.py · emit_worksheet(), group_into_turns(), apply_worksheet()</p>
+</section>

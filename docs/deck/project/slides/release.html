@@ -1,0 +1,37 @@
+<section id="release" style="background:#F6F4EF;color:#1B2230;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:48px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-size:24px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:#2E6E9E">Releases</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:60px;font-weight:700;line-height:1.1;letter-spacing:-1px;color:#1B2230">Every release carries its own Python</h2>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;justify-content:space-between">
+<div style="display:flex;gap:32px">
+<div style="flex:3;display:flex;flex-direction:column;gap:16px;background:#FFFDF8;border:1px solid #E2DED4;border-radius:16px;padding:40px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;line-height:1.2;color:#1B2230">Six standalone programs</h3>
+<p style="font-size:24px;line-height:1.4;color:#4A5363">PyInstaller builds one per platform, each with Python and its libraries in a subtitler-runtime-&lt;version&gt; folder beside it.</p>
+<div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#1B2230;background:#ECE8DD;padding:12px 20px;border-radius:8px">macOS arm64</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#1B2230;background:#ECE8DD;padding:12px 20px;border-radius:8px">Linux arm64</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#1B2230;background:#ECE8DD;padding:12px 20px;border-radius:8px">Windows arm64</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#1B2230;background:#ECE8DD;padding:12px 20px;border-radius:8px">macOS x64</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#1B2230;background:#ECE8DD;padding:12px 20px;border-radius:8px">Linux x64</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#1B2230;background:#ECE8DD;padding:12px 20px;border-radius:8px">Windows x64</p>
+</div>
+</div>
+<div style="flex:2;display:flex;flex-direction:column;gap:16px;background:#FFFDF8;border:1px solid #E2DED4;border-radius:16px;padding:40px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;line-height:1.2;color:#1B2230">Where they go</h3>
+<ul style="font-size:24px;line-height:1.4;color:#4A5363">
+<li>Homebrew, as leduftw/tap/subtitler</li>
+<li>The one-line installers for sh and PowerShell</li>
+<li>PyPI as leduftw-subtitler, run by the machine’s own Python</li>
+<li>WinGet, once Microsoft accepts the first submission</li>
+</ul>
+</div>
+</div>
+<div style="display:flex;gap:32px">
+<p style="flex:1;font-size:24px;line-height:1.4;color:#4A5363;border-top:2px solid #1B2230;padding:20px 0 0 0">playbook release opens a PR that sets the version in pyproject.toml and __version__; landing it publishes everything.</p>
+<p style="flex:1;font-size:24px;line-height:1.4;color:#4A5363;border-top:2px solid #1B2230;padding:20px 0 0 0">Anything read at run time must be package data. translation_guide.md is, so every install can print the guide.</p>
+<p style="flex:1;font-size:24px;line-height:1.4;color:#4A5363;border-top:2px solid #1B2230;padding:20px 0 0 0">smoke-standalone.sh proves each Unix build finds the machine’s certificates and keeps its libraries away from ffmpeg.</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5B6270">.github/playbook.toml · pyproject.toml · scripts/smoke-standalone.sh · docs/system.md</p>
+</section>
