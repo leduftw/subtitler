@@ -16,9 +16,10 @@ slide. To see what has changed since then:
 git diff --stat fb2ebc5 -- src scripts pyproject.toml .github/playbook.toml
 ```
 
-Nothing listed means the deck is still accurate. When a change makes a slide wrong,
-fix the slide and move the commit in all three places: the cover, the last slide
-and this file.
+Nothing listed means those code paths are unchanged. The deck also cites design
+docs and repository instructions; review changes to those sources too.
+When a change makes a slide wrong, fix the slide and move the commit in all three
+places: the cover, the last slide and this file.
 
 ## The files
 

@@ -1,7 +1,7 @@
 <section id="release" style="background:#F6F4EF;color:#1B2230;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:48px">
 <div style="display:flex;flex-direction:column;gap:16px">
 <p style="font-size:24px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:#2E6E9E">Releases</p>
-<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:60px;font-weight:700;line-height:1.1;letter-spacing:-1px;color:#1B2230">Every release carries its own Python</h2>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:60px;font-weight:700;line-height:1.1;letter-spacing:-1px;color:#1B2230">Standalone releases carry their own Python</h2>
 </div>
 <div style="flex:1;display:flex;flex-direction:column;justify-content:space-between">
 <div style="display:flex;gap:32px">
@@ -18,7 +18,7 @@
 </div>
 </div>
 <div style="flex:2;display:flex;flex-direction:column;gap:16px;background:#FFFDF8;border:1px solid #E2DED4;border-radius:16px;padding:40px">
-<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;line-height:1.2;color:#1B2230">Where they go</h3>
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;line-height:1.2;color:#1B2230">Distribution channels</h3>
 <ul style="font-size:24px;line-height:1.4;color:#4A5363">
 <li>Homebrew, as leduftw/tap/subtitler</li>
 <li>The one-line installers for sh and PowerShell</li>
@@ -29,7 +29,7 @@
 </div>
 <div style="display:flex;gap:32px">
 <p style="flex:1;font-size:24px;line-height:1.4;color:#4A5363;border-top:2px solid #1B2230;padding:20px 0 0 0">playbook release opens a PR that sets the version in pyproject.toml and __version__; landing it publishes everything.</p>
-<p style="flex:1;font-size:24px;line-height:1.4;color:#4A5363;border-top:2px solid #1B2230;padding:20px 0 0 0">Anything read at run time must be package data. translation_guide.md is, so every install can print the guide.</p>
+<p style="flex:1;font-size:24px;line-height:1.4;color:#4A5363;border-top:2px solid #1B2230;padding:20px 0 0 0">Bundled resources must be package data. translation_guide.md is, so every install can print the guide.</p>
 <p style="flex:1;font-size:24px;line-height:1.4;color:#4A5363;border-top:2px solid #1B2230;padding:20px 0 0 0">smoke-standalone.sh proves each Unix build finds the machine’s certificates and keeps its libraries away from ffmpeg.</p>
 </div>
 </div>

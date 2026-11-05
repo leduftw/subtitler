@@ -1,7 +1,7 @@
 <section id="run" style="background:#F6F4EF;color:#1B2230;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:48px">
 <div style="display:flex;flex-direction:column;gap:16px">
 <p style="font-size:24px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:#2E6E9E">The pipeline</p>
-<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:60px;font-weight:700;line-height:1.1;letter-spacing:-1px;color:#1B2230">Every check runs before the paid API call</h2>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:60px;font-weight:700;line-height:1.1;letter-spacing:-1px;color:#1B2230">Local preflight checks run before upload</h2>
 </div>
 <div style="display:flex;gap:64px">
 <div style="flex:1;display:flex;flex-direction:column;gap:24px">
@@ -15,7 +15,7 @@
 </div>
 <div style="display:flex;gap:16px;align-items:baseline">
 <p style="width:64px;font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;color:#2E6E9E">3</p>
-<p style="flex:1;font-size:28px;line-height:1.4;color:#1B2230">An existing .srt stops the run, unless --force</p>
+<p style="flex:1;font-size:28px;line-height:1.4;color:#1B2230">An existing .srt stops a paid run, unless --force</p>
 </div>
 <div style="display:flex;gap:16px;align-items:baseline">
 <p style="width:64px;font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;color:#2E6E9E">4</p>
@@ -33,11 +33,11 @@
 </div>
 <div style="display:flex;gap:16px;align-items:baseline">
 <p style="width:64px;font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;color:#2E6E9E">7</p>
-<p style="flex:1;font-size:28px;line-height:1.4;color:#1B2230">ffmpeg extracts the audio into a temporary folder</p>
+<p style="flex:1;font-size:28px;line-height:1.4;color:#1B2230">ffmpeg extracts audio; the folder is temporary by default</p>
 </div>
 <div style="display:flex;gap:16px;align-items:baseline">
 <p style="width:64px;font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;color:#2E6E9E">8</p>
-<p style="flex:1;font-size:28px;line-height:1.4;color:#1B2230">Audio over the provider’s upload cap is refused</p>
+<p style="flex:1;font-size:28px;line-height:1.4;color:#1B2230">Audio over the configured upload limit is refused</p>
 </div>
 <div style="display:flex;gap:16px;align-items:baseline">
 <p style="width:64px;font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;color:#2E6E9E">9</p>

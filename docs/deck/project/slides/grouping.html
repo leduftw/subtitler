@@ -7,11 +7,11 @@
 <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:24px">
 <div style="display:flex;flex-direction:column;gap:16px;background:#FFFDF8;border:1px solid #E2DED4;border-radius:16px;padding:32px">
 <p style="font-family:'Space Grotesk', Arial, sans-serif;font-size:120px;font-weight:700;line-height:1;color:#1B2230">84</p>
-<p style="font-size:28px;line-height:1.4;color:#4A5363">characters at most in one cue</p>
+<p style="font-size:28px;line-height:1.4;color:#4A5363">character threshold for adding another word</p>
 </div>
 <div style="display:flex;flex-direction:column;gap:16px;background:#FFFDF8;border:1px solid #E2DED4;border-radius:16px;padding:32px">
 <p style="font-family:'Space Grotesk', Arial, sans-serif;font-size:120px;font-weight:700;line-height:1;color:#1B2230">6 s</p>
-<p style="font-size:28px;line-height:1.4;color:#4A5363">the longest one cue may run</p>
+<p style="font-size:28px;line-height:1.4;color:#4A5363">duration threshold for adding another word</p>
 </div>
 <div style="display:flex;flex-direction:column;gap:16px;background:#FFFDF8;border:1px solid #E2DED4;border-radius:16px;padding:32px">
 <p style="font-family:'Space Grotesk', Arial, sans-serif;font-size:120px;font-weight:700;line-height:1;color:#1B2230">0.9 s</p>
@@ -23,8 +23,8 @@
 </div>
 </div>
 <div style="display:flex;gap:32px">
-<p style="flex:1;font-size:28px;line-height:1.4;color:#4A5363;border-top:2px solid #1B2230;padding:20px 0 0 0">Every grouped cue lasts at least 0.5 s, and its text wraps at 42 characters a line.</p>
-<p style="flex:1;font-size:28px;line-height:1.4;color:#4A5363;border-top:2px solid #1B2230;padding:20px 0 0 0">With fewer than two words there is nothing to group, so the provider keeps what it has: a phrase, or the words themselves.</p>
+<p style="flex:1;font-size:28px;line-height:1.4;color:#4A5363;border-top:2px solid #1B2230;padding:20px 0 0 0">Grouped cues last at least 0.5 s. Wrapping targets 42 characters; single words are never split.</p>
+<p style="flex:1;font-size:28px;line-height:1.4;color:#4A5363;border-top:2px solid #1B2230;padding:20px 0 0 0">A single word may exceed either threshold. With fewer than two words, providers keep the phrase or word fallback.</p>
 </div>
 </div>
 <p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5B6270">src/subtitler/srt.py · group_words_into_cues(), _should_start_new_cue(), _merge_words()</p>

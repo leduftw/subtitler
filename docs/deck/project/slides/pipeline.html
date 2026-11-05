@@ -12,7 +12,7 @@
 <x-connector style="width:40px;color:#2E6E9E;border-width:3px"></x-connector>
 <div style="flex:1;min-height:260px;display:flex;flex-direction:column;gap:12px;background:#FFFDF8;border:1px solid #E2DED4;border-radius:16px;padding:28px">
 <h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;line-height:1.2;color:#1B2230">ffmpeg</h3>
-<p style="font-size:24px;line-height:1.4;color:#4A5363">The first audio track, as mono 16 kHz mp3 at 48 kbit/s</p>
+<p style="font-size:24px;line-height:1.4;color:#4A5363">By default: first audio track, mono 16 kHz mp3 at 48 kbit/s</p>
 </div>
 <x-connector style="width:40px;color:#2E6E9E;border-width:3px"></x-connector>
 <div style="flex:1;min-height:260px;display:flex;flex-direction:column;gap:12px;background:#FFFDF8;border:1px solid #E2DED4;border-radius:16px;padding:28px">
@@ -31,7 +31,7 @@
 </div>
 </div>
 <div style="display:flex;gap:32px">
-<p style="flex:1;font-size:28px;line-height:1.4;color:#4A5363;border-top:2px solid #1B2230;padding:20px 0 0 0">Before extracting, ffprobe reads the duration, and subtitler prints what the chosen provider will charge for it.</p>
+<p style="flex:1;font-size:28px;line-height:1.4;color:#4A5363;border-top:2px solid #1B2230;padding:20px 0 0 0">Before extracting, ffprobe tries to read the duration; when available, subtitler prints the provider’s estimated cost.</p>
 <p style="flex:1;font-size:28px;line-height:1.4;color:#4A5363;border-top:2px solid #1B2230;padding:20px 0 0 0">--dry-run stops once the audio is extracted: no API call, and no .srt.</p>
 </div>
 </div>
