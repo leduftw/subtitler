@@ -1,0 +1,53 @@
+<section id="run" style="background:#F6F4EF;color:#1B2230;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:48px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-size:24px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:#2E6E9E">The pipeline</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:60px;font-weight:700;line-height:1.1;letter-spacing:-1px;color:#1B2230">Local preflight checks run before upload</h2>
+</div>
+<div style="display:flex;gap:64px">
+<div style="flex:1;display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;gap:16px;align-items:baseline">
+<p style="width:64px;font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;color:#2E6E9E">1</p>
+<p style="flex:1;font-size:28px;line-height:1.4;color:#1B2230">The input exists and is a file, or the run exits 2</p>
+</div>
+<div style="display:flex;gap:16px;align-items:baseline">
+<p style="width:64px;font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;color:#2E6E9E">2</p>
+<p style="flex:1;font-size:28px;line-height:1.4;color:#1B2230">ffmpeg and ffprobe are on PATH</p>
+</div>
+<div style="display:flex;gap:16px;align-items:baseline">
+<p style="width:64px;font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;color:#2E6E9E">3</p>
+<p style="flex:1;font-size:28px;line-height:1.4;color:#1B2230">An existing .srt stops a paid run, unless --force</p>
+</div>
+<div style="display:flex;gap:16px;align-items:baseline">
+<p style="width:64px;font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;color:#2E6E9E">4</p>
+<p style="flex:1;font-size:28px;line-height:1.4;color:#1B2230">The registry builds the chosen provider</p>
+</div>
+<div style="display:flex;gap:16px;align-items:baseline">
+<p style="width:64px;font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;color:#2E6E9E">5</p>
+<p style="flex:1;font-size:28px;line-height:1.4;color:#1B2230">ffprobe’s duration gives the cost estimate</p>
+</div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;gap:16px;align-items:baseline">
+<p style="width:64px;font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;color:#2E6E9E">6</p>
+<p style="flex:1;font-size:28px;line-height:1.4;color:#1B2230">The provider’s keys are set (not checked on --dry-run)</p>
+</div>
+<div style="display:flex;gap:16px;align-items:baseline">
+<p style="width:64px;font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;color:#2E6E9E">7</p>
+<p style="flex:1;font-size:28px;line-height:1.4;color:#1B2230">ffmpeg extracts audio; the folder is temporary by default</p>
+</div>
+<div style="display:flex;gap:16px;align-items:baseline">
+<p style="width:64px;font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;color:#2E6E9E">8</p>
+<p style="flex:1;font-size:28px;line-height:1.4;color:#1B2230">Audio over the configured upload limit is refused</p>
+</div>
+<div style="display:flex;gap:16px;align-items:baseline">
+<p style="width:64px;font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;color:#2E6E9E">9</p>
+<p style="flex:1;font-size:28px;line-height:1.4;color:#1B2230">--dry-run stops here, before any API call</p>
+</div>
+<div style="display:flex;gap:16px;align-items:baseline">
+<p style="width:64px;font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;color:#2E6E9E">10</p>
+<p style="flex:1;font-size:28px;line-height:1.4;color:#1B2230">Transcribe, render the cues and write the .srt</p>
+</div>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5B6270">src/subtitler/pipeline.py · run(), audio_workspace() · src/subtitler/media.py</p>
+</section>

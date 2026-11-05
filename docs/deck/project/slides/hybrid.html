@@ -1,0 +1,37 @@
+<section id="hybrid" style="background:#F6F4EF;color:#1B2230;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:48px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-size:24px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:#2E6E9E">Providers</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:60px;font-weight:700;line-height:1.1;letter-spacing:-1px;color:#1B2230">azure-hybrid makes two passes and merges them</h2>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;justify-content:space-between">
+<div style="display:flex;align-items:center;gap:16px">
+<div style="width:620px;display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;flex-direction:column;gap:8px;background:#FFFDF8;border:1px solid #E2DED4;border-radius:16px;padding:28px">
+<p style="font-size:24px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:#2E6E9E">Pass 1 · the what</p>
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;line-height:1.2;color:#1B2230">MAI transcript</h3>
+<p style="font-size:24px;line-height:1.4;color:#4A5363">mai-transcribe-1.5 in enhanced mode: the wording pass, with no word timings or speakers</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;background:#FFFDF8;border:1px solid #E2DED4;border-radius:16px;padding:28px">
+<p style="font-size:24px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:#2E6E9E">Pass 2 · the when and who</p>
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;line-height:1.2;color:#1B2230">Fast transcription</h3>
+<p style="font-size:24px;line-height:1.4;color:#4A5363">Word timings and, by default, speaker ids, with the language auto-detected</p>
+</div>
+</div>
+<x-connector style="width:40px;color:#2E6E9E;border-width:3px"></x-connector>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#FFFDF8;border:1px solid #E2DED4;border-radius:16px;padding:28px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:28px;font-weight:600;color:#1B2230">align_text_to_words</p>
+<p style="font-size:24px;line-height:1.4;color:#4A5363">Puts MAI’s words on the fast pass’s timings and speakers</p>
+</div>
+<x-connector style="width:40px;color:#2E6E9E;border-width:3px"></x-connector>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#FFFDF8;border:1px solid #E2DED4;border-radius:16px;padding:28px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:28px;font-weight:600;color:#1B2230">group_words_into_cues</p>
+<p style="font-size:24px;line-height:1.4;color:#4A5363">The same cue rules as every other provider</p>
+</div>
+</div>
+<div style="display:flex;gap:32px">
+<p style="flex:1;font-size:28px;line-height:1.4;color:#4A5363;border-top:2px solid #1B2230;padding:20px 0 0 0">Two passes cost about $0.012 a minute, twice what azure-fast charges.</p>
+<p style="flex:1;font-size:28px;line-height:1.4;color:#4A5363;border-top:2px solid #1B2230;padding:20px 0 0 0">Outside MAI’s 43 languages the two passes may not line up, so azure-fast is the better choice there.</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5B6270">src/subtitler/providers/azure_hybrid.py · transcribe() · src/subtitler/align.py · docs/system.md</p>
+</section>
