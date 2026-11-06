@@ -9,11 +9,11 @@ describes along its bottom edge.
 
 ## What it describes
 
-The deck describes the code at commit `fb2ebc5`, named on its cover and its last
+The deck describes the code at commit `b809317`, named on its cover and its last
 slide. To see what has changed since then:
 
 ```sh
-git diff --stat fb2ebc5 -- src scripts pyproject.toml .github/playbook.toml
+git diff --stat b809317 -- src scripts pyproject.toml .github/playbook.toml
 ```
 
 Nothing listed means those code paths are unchanged. The deck also cites design
