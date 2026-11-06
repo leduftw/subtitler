@@ -223,6 +223,7 @@ class Mai2TranscriptionTest(unittest.TestCase):
             video = Path(folder) / "video.mp4"
             video.touch()
             with (
+                mock.patch("subtitler.pipeline.ensure_tool"),
                 mock.patch("subtitler.pipeline.extract_audio") as extract,
                 mock.patch("subtitler.providers._azure_speech.post_transcribe") as post,
             ):
