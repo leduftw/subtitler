@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 # "subtitler" on PyPI is an unrelated project. The command is still `subtitler`.
 name = "leduftw-subtitler"
-version = "1.0.2"
+version = "1.1.0"
 description = "Subtitles for any video, in any language."
 readme = "README.md"
 license = "MIT"

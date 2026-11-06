@@ -4,4 +4,4 @@ Transcribes a local media file into speaker-labelled SRT cues, and can then
 translate those cues into another language without disturbing their timings.
 """
 
-__version__ = "1.0.2"
+__version__ = "1.1.0"
