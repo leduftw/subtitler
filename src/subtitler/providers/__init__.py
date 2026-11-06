@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from . import azure_fast, azure_hybrid, azure_mai, elevenlabs_scribe
+from . import azure_fast, azure_hybrid, azure_mai, azure_mai_2, elevenlabs_scribe
 from .base import ProviderSpec, TranscriptionProvider
 
 if TYPE_CHECKING:
@@ -23,12 +23,13 @@ if TYPE_CHECKING:
 
 _MODULES = {
     module.SPEC.name: module
-    for module in (elevenlabs_scribe, azure_fast, azure_hybrid, azure_mai)
+    for module in (elevenlabs_scribe, azure_mai_2, azure_fast, azure_hybrid, azure_mai)
 }
 _SPECS = {name: module.SPEC for name, module in _MODULES.items()}
 
 # Provider name constants and the user-selectable set, in display order.
 AZURE_MAI = azure_mai.SPEC.name
+AZURE_MAI_2 = azure_mai_2.SPEC.name
 AZURE_FAST = azure_fast.SPEC.name
 AZURE_HYBRID = azure_hybrid.SPEC.name
 SCRIBE = elevenlabs_scribe.SPEC.name
@@ -41,6 +42,7 @@ __all__ = [
     "AZURE_FAST",
     "AZURE_HYBRID",
     "AZURE_MAI",
+    "AZURE_MAI_2",
     "DEFAULT",
     "NAMES",
     "SCRIBE",

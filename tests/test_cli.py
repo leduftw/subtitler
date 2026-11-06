@@ -155,6 +155,90 @@ class VersionTest(unittest.TestCase):
                 self.assertEqual(run(form), (0, f"subtitler {__version__}\n", ""))
 
 
+class Mai2TranscriptionTest(unittest.TestCase):
+    def test_cli_writes_native_timing_and_speaker_changes(self) -> None:
+        payload = {
+            "phrases": [
+                {
+                    "speaker": speaker,
+                    "words": [
+                        {
+                            "text": text,
+                            "offsetMilliseconds": start,
+                            "durationMilliseconds": 600,
+                        }
+                    ],
+                }
+                for speaker, text, start in ((0, "Hello.", 1000), (1, "Hi.", 1800))
+            ]
+        }
+
+        def extract(input_path, audio_path, **kwargs):
+            audio_path.write_bytes(b"test audio")
+
+        with tempfile.TemporaryDirectory() as folder:
+            video, output = Path(folder) / "video.mp4", Path(folder) / "video.srt"
+            video.touch()
+            with (
+                mock.patch.dict(os.environ, {"AZURE_SPEECH_API_KEY": "test-key"}),
+                mock.patch("subtitler.pipeline.ensure_tool"),
+                mock.patch("subtitler.pipeline.probe_duration_seconds", return_value=3),
+                mock.patch("subtitler.pipeline.extract_audio", side_effect=extract),
+                mock.patch(
+                    "subtitler.providers._azure_speech.post_transcribe",
+                    return_value=payload,
+                ) as post,
+            ):
+                code, out, err = run(
+                    str(video),
+                    "--provider",
+                    "azure-mai-2",
+                    "--language",
+                    "en",
+                    "--azure-endpoint",
+                    "https://speech.example.com",
+                    "-o",
+                    str(output),
+                )
+            self.assertEqual((code, err), (0, ""))
+            self.assertIn("MAI-Transcribe-2", out)
+            self.assertIn("2 speakers", out)
+            self.assertEqual(
+                output.read_text(),
+                "1\n00:00:01,000 --> 00:00:01,600\n- Hello.\n\n"
+                "2\n00:00:01,800 --> 00:00:02,400\n- Hi.\n",
+            )
+            self.assertEqual(post.call_count, 1)
+            definition = post.call_args.args[2]
+            self.assertEqual(definition["diarization"], {"enabled": True})
+            self.assertEqual(
+                definition["enhancedMode"]["modelOptions"],
+                {"timestamps": "word", "transcribeStyle": "clean"},
+            )
+
+    def test_unsupported_language_exits_two_before_extracting_or_uploading(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            video = Path(folder) / "video.mp4"
+            video.touch()
+            with (
+                mock.patch("subtitler.pipeline.extract_audio") as extract,
+                mock.patch("subtitler.providers._azure_speech.post_transcribe") as post,
+            ):
+                code, _, err = run(
+                    str(video),
+                    "--provider",
+                    "azure-mai-2",
+                    "--language",
+                    "sr",
+                )
+            self.assertEqual(code, 2)
+            self.assertIn("not supported by azure-mai-2", err)
+            extract.assert_not_called()
+            post.assert_not_called()
+
+
 class UpdateCommandTest(unittest.TestCase):
     def test_update_and_upgrade_run_the_update(self) -> None:
         for word in ("update", "upgrade"):

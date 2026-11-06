@@ -60,7 +60,7 @@ the extracted folder with `xattr -dr com.apple.quarantine .`.
 
 - `ffmpeg` and `ffprobe` on `PATH`. Homebrew installs them for you; elsewhere, use
   `winget install Gyan.FFmpeg` on Windows or your system's package manager on Linux.
-- `AZURE_SPEECH_ENDPOINT` and `AZURE_SPEECH_API_KEY` for the Azure providers (`azure-fast`, `azure-hybrid`)
+- `AZURE_SPEECH_ENDPOINT` and `AZURE_SPEECH_API_KEY` for the Azure providers (`azure-mai-2`, `azure-fast`, `azure-hybrid`)
 - `ELEVENLABS_API_KEY` for `scribe`
 
 ### Updating
@@ -108,15 +108,22 @@ Every provider produces word-level timing and speaker labels in sync with the au
 
 | `--provider` | Model | Passes | Cost/min | Cost/hour | Notes |
 | --- | --- | --- | --- | --- | --- |
-| `scribe` (default) | ElevenLabs Scribe v2 | 1 | $0.0037 | $0.22 | Cheapest, lowest WER |
+| `scribe` (default) | ElevenLabs Scribe v2 | 1 | $0.0037 | $0.22 | Broad language coverage, word timing and speakers |
+| `azure-mai-2` | MAI-Transcribe-2 | 1 | $0.006 | $0.36 | Native word timing and speakers; preview limits below |
 | `azure-fast` | Azure fast transcription | 1 | $0.006 | $0.36 | No ElevenLabs account needed |
 | `azure-hybrid` | MAI-1.5 text + fast timing | 2 | $0.012 | $0.72 | Cleaner text than `azure-fast`, at 2× its cost |
 
-`scribe` is the default because it is both the cheapest of the three and the most
-accurate: it tops the independent
+These are the rates used for the estimate printed before upload. The
+`azure-mai-2` estimate uses the standard Azure rate conservatively; Microsoft's
+[introductory offer](https://microsoft.ai/news/mai-transcribe-2-is-the-fastest-most-accurate-and-cheapest-speech-recognition-model-in-the-world/)
+is $0.10/hour through December 31, 2026, so the actual bill may be lower.
+
+`scribe` remains the default. As of November 6, 2026, the independent
 [Artificial Analysis leaderboard](https://artificialanalysis.ai/speech-to-text/non-streaming)
-at 2.2% WER, against MAI's 2.4%. Use the Azure providers when you have no
-ElevenLabs account, or for locales Scribe doesn't cover.
+reports 2.0% WER for MAI-Transcribe-2 and 2.2% for Scribe v2. That is a useful
+reason to compare `azure-mai-2` on your recordings, rather than a guarantee of
+better subtitles for every film or language. Scribe covers more languages;
+MAI-Transcribe-2 does not support Serbian or Croatian.
 
 ### Speaker labels (diarization)
 
@@ -137,9 +144,11 @@ speaker, and marks each turn with the standard `-` dialogue prefix:
 - You don't need to apologize.
 ```
 
-This is **on by default** — Azure bills diarization at no extra cost on fast
-transcription, and a recording that turns out to have only one voice renders with
-no prefixes at all, so there's nothing to lose.
+This is **on by default**. Azure fast transcription includes diarization, and a
+recording with only one voice renders with no prefixes. MAI-Transcribe-2 has a
+preview limitation: diarization can fail on longer recordings, including reports
+around 15 minutes. Use `--no-diarize` or another provider for long files; subtitler
+does not silently remove speaker labels and retry.
 
 ```sh
 # Turn it off:
@@ -151,6 +160,7 @@ subtitler "video.mp4" --provider azure-fast --max-speakers 2
 
 `--max-speakers 2` is worth setting for a two-person interview: a tighter bound
 makes Azure less likely to split one voice across two speaker ids.
+`azure-mai-2` does not support `--max-speakers`; its speaker count is automatic.
 
 Diarization is not perfect. Where Azure gives both sides of an interruption the
 same speaker id, the two still share one subtitle — expect a handful of these per
@@ -187,7 +197,10 @@ subtitler \
 
 ### Azure Quick Start
 
-The Azure providers need an Azure Speech resource. With the
+The Azure providers share the same credentials and need an Azure Speech resource.
+For `azure-mai-2`, choose a
+[supported region](https://learn.microsoft.com/azure/ai-services/speech-service/regions),
+such as North Europe. With the
 [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli)
 installed, you can read its endpoint and key straight into the environment:
 
@@ -222,7 +235,18 @@ subtitler \
   --output "video.en.srt"
 ```
 
-Azure accepts large uploads (500 MiB for `azure-fast`, 300 MiB for `azure-hybrid`):
+If you need a new Speech resource, choose a globally unique resource name and
+create it in your resource group before reading the endpoint and key above:
+
+```sh
+az cognitiveservices account create \
+  --resource-group "$RESOURCE_GROUP" --name "$SPEECH_RESOURCE" \
+  --kind SpeechServices --sku S0 --location northeurope \
+  --custom-domain "$SPEECH_RESOURCE"
+```
+
+The default upload caps are 238 MiB for `azure-mai-2`, 500 MiB for `azure-fast`,
+and 300 MiB for `azure-hybrid`. Lowering bitrate can reduce upload size:
 
 ```sh
 subtitler \
@@ -232,22 +256,53 @@ subtitler \
   --output "video.srt"
 ```
 
-#### Best wording Azure can give: `azure-hybrid`
+#### Native MAI-Transcribe-2: `azure-mai-2`
+
+MAI-Transcribe-2 returns its own word-level timestamps and optional speaker labels
+in one request. It needs no hybrid alignment pass:
+
+```sh
+subtitler \
+  --provider azure-mai-2 \
+  "video.mp4" \
+  --language en \
+  --output "video.en.srt"
+```
+
+The default `--azure-transcribe-style display` requests MAI-2's `clean` style,
+which removes fillers and formats speech for readability. Use
+`--azure-transcribe-style verbatim` to preserve fillers and false starts.
+`--azure-model` applies only to the older `azure-hybrid` text pass; `azure-mai-2`
+always selects MAI-Transcribe-2.
+
+This Azure API is in preview. Native diarization can fail on longer recordings
+(reported from around 15 minutes); see the
+[Microsoft discussion](https://learn.microsoft.com/answers/questions/5995065/mai-transcribe-2-speaker-diarization-fails-on-reco).
+For long files, use `--no-diarize` to keep MAI-2's text and timing without speaker
+labels, or choose `scribe` or `azure-fast`. A failed request is reported as an
+error; the tool never silently changes the requested provider or diarization.
+
+MAI-2 supports 60 languages. Run
+`subtitler --provider azure-mai-2 --list-languages` for the exact codes. An
+unsupported explicit hint, including `sr` or `hr`, exits 2 before upload; omit
+the hint only for audio in one of the supported languages when you want
+auto-detection.
+
+#### Older MAI-1.5 with Azure timing: `azure-hybrid`
 
 MAI-Transcribe-1.5 is Azure's LLM transcription mode, and it writes cleaner text
-than plain fast transcription does. But Azure returns only coarse timing for it
-and can't diarize it at all — on its own it collapses a whole recording into one
+than plain fast transcription does. Unlike MAI-2, version 1.5 returns only coarse
+timing and cannot diarize — on its own it collapses a whole recording into one
 enormous subtitle, which is why it isn't offered as a `--provider` choice.
 
-`azure-hybrid` makes it usable: it runs MAI for the text and Azure fast
+`azure-hybrid` makes version 1.5 usable: it runs MAI for the text and Azure fast
 transcription for word-level timing *and speakers*, then merges them so each line
 appears as it's spoken and attributed to whoever said it. Same credentials, two
 transcription passes (about 2× the cost).
 
-This is the best transcript *Azure* offers, not the best transcript available:
-Scribe still scores lower on the WER leaderboard (2.2% against MAI's 2.4%) and
-costs a third as much. Reach for `azure-hybrid` when you're staying on Azure and
-`azure-fast`'s wording isn't good enough.
+The hybrid remains available for existing workflows. For MAI-2's newer text
+model and native timing, choose `azure-mai-2` instead; neither path removes the
+need to review difficult dialogue.
 
 ```sh
 subtitler \
@@ -259,7 +314,7 @@ subtitler \
 
 #### Languages MAI doesn't cover
 
-MAI supports 43 languages; for anything outside that set, `azure-hybrid`
+MAI-1.5 supports 43 languages; for anything outside that set, `azure-hybrid`
 auto-detects and often produces wrong-language or mistimed output.
 
 `scribe` covers 90+ languages and takes a plain ISO code, so it is the simplest
@@ -269,7 +324,7 @@ option:
 subtitler "video.mp4" --language es --output "video.es.srt"
 ```
 
-`azure-fast` also covers many more locales than MAI, but wants a BCP-47 region
+`azure-fast` also covers many more locales than MAI-1.5, but wants a BCP-47 region
 code (`es-ES`, `en-US`); bare codes like `es` are mapped for you:
 
 ```sh
@@ -335,6 +390,7 @@ by hand — ask for the language you want and it will do all three steps.
 - Use `--language` when you know it; it improves accuracy and reduces language-detection ambiguity.
 - Language hints use short codes. English is `en`, German is `de`, Spanish is `es`. Run `subtitler --list-languages` for the full supported language/code list.
 - `azure-hybrid` inherits MAI's 43-language list, which is shorter than Whisper's. If you pass a `--language` it doesn't list, `subtitler` drops the hint and lets Azure auto-detect; run `subtitler --provider azure-hybrid --list-languages` to see its set.
+- `azure-mai-2` has a separate 60-language list and rejects unsupported hints. Its native diarization is unsuitable for some long recordings in the current preview; use `--no-diarize` or another provider when needed.
 - OpenAI is deliberately not supported. `whisper-1` is legacy (removed 2027-01-20), its replacement `gpt-transcribe` returns no timestamps at all, and `gpt-4o-transcribe-diarize` returns only speaker-turn segments — measured on a 3-minute clip, 7 of its 91 segments ran over 6 seconds with no word timings to split them. None of the three can produce well-timed subtitles.
 
 ## Development

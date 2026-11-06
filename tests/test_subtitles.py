@@ -431,6 +431,7 @@ class ProviderRegistryTest(unittest.TestCase):
             self.providers.NAMES,
             (
                 self.providers.SCRIBE,
+                self.providers.AZURE_MAI_2,
                 self.providers.AZURE_FAST,
                 self.providers.AZURE_HYBRID,
             ),
@@ -473,6 +474,9 @@ class ResolveDiarizeTest(unittest.TestCase):
         )
         self.assertTrue(
             resolve_diarize(None, self.providers.spec(self.providers.SCRIBE))
+        )
+        self.assertTrue(
+            resolve_diarize(None, self.providers.spec(self.providers.AZURE_MAI_2))
         )
 
     def test_defaults_off_where_unsupported(self) -> None:

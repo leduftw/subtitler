@@ -2,8 +2,7 @@
 
 Scribe returns word-level timestamps *and* diarization from a single request, so
 it needs no alignment pass and no second call — the same shape as
-:mod:`.azure_fast`, but from a model that tops the independent Artificial
-Analysis word-error-rate leaderboard.
+:mod:`.azure_fast`, from a model with strong independent word-error-rate results.
 
 The response is a flat list of tokens rather than phrases: each carries a
 ``type`` (``word``, ``spacing``, or ``audio_event``), a start/end in **seconds**,
