@@ -98,7 +98,7 @@ The response uses the existing Azure phrase/word shape, so speaker ids and milli
 
 MAI-2 supports 60 language codes. Its complete list comes from the [Microsoft language table](https://learn.microsoft.com/azure/ai-services/speech-service/mai-transcribe); Serbian and Croatian are absent. Unsupported explicit hints raise `UsageError` (exit 2) before upload. This is deliberately stricter than MAI-1.5's auto-detection fallback.
 
-This service is in preview. Native diarization has [reported failures on longer recordings](https://learn.microsoft.com/answers/questions/5995065/mai-transcribe-2-speaker-diarization-fails-on-reco), including recordings around 15 minutes. `--no-diarize` keeps native word timing without speaker labels; alternatively, use Scribe or Azure fast transcription. Errors never trigger a silent downgrade. MAI-2 does not accept `diarization.maxSpeakers`, so `--max-speakers` is unsupported for this provider. Its default upload cap is 238 MiB, below the REST reference's 250 MB limit; there is no automatic chunking.
+This service is in preview. Native diarization has [reported failures on longer recordings](https://learn.microsoft.com/answers/questions/5995065/mai-transcribe-2-speaker-diarization-fails-on-reco), including recordings around 15 minutes. `--no-diarize` keeps native word timing without speaker labels; alternatively, use Scribe or Azure fast transcription. Errors never trigger a silent downgrade. MAI-2 does not accept `diarization.maxSpeakers`, so `--max-speakers` is unsupported for this provider. Its default upload cap is 238 MiB, below the REST reference's 250 MB limit. The same reference requires audio shorter than 2 hours, which subtitler doesn't check before uploading; there is no automatic chunking.
 
 ## Azure MAI-1.5 (internal only)
 
@@ -220,15 +220,17 @@ If the audio file exceeds the upload limit, reduce bitrate or implement chunking
 
 Worth re-checking periodically; snapshot verified November 6, 2026:
 
-Independent word-error-rate ranking on the [Artificial Analysis leaderboard](https://artificialanalysis.ai/speech-to-text/non-streaming) (AA-WER, ~8h weighted 50% conversational / 25% VoxPopuli / 25% Earnings22):
+Independent word-error-rate ranking on the [Artificial Analysis leaderboard](https://artificialanalysis.ai/speech-to-text/non-streaming) (AA-WER, ~8h weighted 50% conversational / 25% VoxPopuli / 25% Earnings22). Every model ahead of Scribe v2 is listed; below it, only the ones this document discusses:
 
 ```text
-MAI-Transcribe-2       2.0%     <- `azure-mai-2`
-ElevenLabs Scribe v2   2.2%     <- `scribe`
-MAI-Transcribe-1.5     2.4%     <- `azure-hybrid`'s text pass
-GPT Transcribe         3.3%
-GPT-4o Transcribe      4.0%
-Whisper Large v3       4.1%
+Fun-Realtime-ASR-preview     1.7%     (Alibaba; no provider here)
+MAI-Transcribe-2             2.0%     <- `azure-mai-2`
+Voxtral Small Transcribe 3   2.1%     (Mistral; no provider here)
+ElevenLabs Scribe v2         2.2%     <- `scribe`
+MAI-Transcribe-1.5           2.4%     <- `azure-hybrid`'s text pass
+GPT Transcribe               3.3%
+GPT-4o Transcribe            4.0%
+Whisper Large v3             4.1%
 ```
 
 WER measures transcript words on those benchmark recordings, not subtitle timing, speaker separation or accuracy on a particular film. Compare providers against manually checked dialogue from representative media before treating a small aggregate lead as a reason to change the default. Scribe remains the default; it also covers languages outside MAI-2's 60-language set.

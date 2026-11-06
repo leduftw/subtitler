@@ -281,6 +281,8 @@ This Azure API is in preview. Native diarization can fail on longer recordings
 For long files, use `--no-diarize` to keep MAI-2's text and timing without speaker
 labels, or choose `scribe` or `azure-fast`. A failed request is reported as an
 error; the tool never silently changes the requested provider or diarization.
+Microsoft's REST reference also limits one request to audio shorter than 2 hours,
+and subtitler sends the whole file at once, so use `scribe` for longer recordings.
 
 MAI-2 supports 60 languages. Run
 `subtitler --provider azure-mai-2 --list-languages` for the exact codes. An
