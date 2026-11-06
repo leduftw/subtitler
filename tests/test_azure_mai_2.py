@@ -185,13 +185,28 @@ class Mai2ResponseTest(unittest.TestCase):
         with self.assertRaisesRegex(UserFacingError, "native word timestamps"):
             mai.transcription_to_cues(payload)
 
-    def test_silent_or_malformed_response_reports_no_timing(self) -> None:
-        for payload in ({}, {"phrases": []}, {"phrases": "invalid"}):
+    def test_malformed_response_reports_no_timing(self) -> None:
+        for payload in (
+            {},
+            {"phrases": "invalid"},
+            {"combinedPhrases": [{"text": "Untimed words."}], "phrases": []},
+        ):
             with (
                 self.subTest(payload=payload),
                 self.assertRaisesRegex(UserFacingError, "native word timestamps"),
             ):
                 mai.transcription_to_cues(payload)
+
+    def test_silent_audio_reports_no_speech_rather_than_bad_timing(self) -> None:
+        # The live service answers eight seconds of silence with this shape.
+        payload = {
+            "durationMilliseconds": 8000,
+            "combinedPhrases": [{"text": ""}],
+            "phrases": [],
+        }
+        with self.assertRaisesRegex(UserFacingError, "no speech") as caught:
+            mai.transcription_to_cues(payload)
+        self.assertNotIn("timestamps", str(caught.exception))
 
 
 class Mai2ProviderTest(unittest.TestCase):

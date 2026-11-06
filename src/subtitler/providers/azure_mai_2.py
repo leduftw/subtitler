@@ -221,7 +221,13 @@ def transcription_to_cues(payload: dict[str, object]) -> list[Cue]:
                     raise _missing_timing()
     words = az.collect_words(payload)
     if not words:
-        raise _missing_timing()
+        if az.combined_text(payload):
+            raise _missing_timing()
+        # Silent audio comes back as an empty transcript, not as a timing fault.
+        raise UserFacingError(
+            "MAI-Transcribe-2 returned no speech for this audio "
+            "(it may be silent or too short)."
+        )
     return group_words_into_cues(words) or words
 
 
