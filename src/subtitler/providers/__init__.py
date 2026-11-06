@@ -68,8 +68,10 @@ def print_supported_languages(name: str) -> None:
     """Print the transcription language/code list for a provider."""
     provider_spec = spec(name)
     print(f"Supported transcription languages for {name}:")
+    # Pad every code to the longest one: MAI-2 mixes two- and three-letter codes.
+    width = max(len(code) for code, _ in provider_spec.languages)
     for code, language in provider_spec.languages:
-        print(f"  {code:<2}  {language}")
+        print(f"  {code:<{width}}  {language}")
     print()
     print("Use the code with --language, for example: --language en")
     if provider_spec.language_note:

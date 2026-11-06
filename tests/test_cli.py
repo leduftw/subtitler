@@ -216,6 +216,17 @@ class Mai2TranscriptionTest(unittest.TestCase):
                 {"timestamps": "word", "transcribeStyle": "clean"},
             )
 
+    def test_language_list_aligns_two_and_three_letter_codes(self) -> None:
+        code, out, err = run("--provider", "azure-mai-2", "--list-languages")
+        self.assertEqual((code, err), (0, ""))
+        rows = [line for line in out.splitlines() if line.startswith("  ")]
+        self.assertEqual(len(rows), 60)
+        self.assertIn("  fil  Filipino", rows)
+        self.assertIn("  en   English", rows)
+        # Every language name starts in the same column.
+        names = {len(row) - len(row.split(maxsplit=1)[1]) for row in rows}
+        self.assertEqual(names, {7})
+
     def test_unsupported_language_exits_two_before_extracting_or_uploading(
         self,
     ) -> None:
