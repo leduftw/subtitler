@@ -9,17 +9,19 @@ describes along its bottom edge.
 
 ## What it describes
 
-The deck describes the code at commit `b809317`, named on its cover and its last
-slide. To see what has changed since then:
+The deck describes the code in [source PR #32](https://github.com/leduftw/subtitler/pull/32),
+named on its cover and its last slide. The pull request's head remains fetchable
+after a squash merge. To see what has changed since then:
 
 ```sh
-git diff --stat b809317 -- src scripts pyproject.toml .github/playbook.toml
+git fetch origin refs/pull/32/head
+git diff --stat FETCH_HEAD -- src scripts pyproject.toml .github/playbook.toml
 ```
 
 Nothing listed means those code paths are unchanged. The deck also cites design
 docs and repository instructions; review changes to those sources too.
-When a change makes a slide wrong, fix the slide and move the commit in all three
-places: the cover, the last slide and this file.
+When a change makes a slide wrong, fix the slide and update the source PR reference
+in all three places: the cover, the last slide and this file.
 
 ## The files
 
