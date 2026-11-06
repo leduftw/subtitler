@@ -269,6 +269,7 @@ class Mai2ProviderTest(unittest.TestCase):
             azure_endpoint="https://speech.example.com",
             azure_model="mai-transcribe-1.5",
             azure_transcribe_style="display",
+            audio_format="mp3",
             language="en",
             diarize=False,
             max_speakers=8,
@@ -283,6 +284,7 @@ class Mai2ProviderTest(unittest.TestCase):
         config = SimpleNamespace(
             azure_endpoint=None,
             azure_transcribe_style="verbatim",
+            audio_format="mp3",
             language=None,
             diarize=True,
             max_speakers=2,
@@ -291,6 +293,18 @@ class Mai2ProviderTest(unittest.TestCase):
         with contextlib.redirect_stderr(err):
             mai.build(config)
         self.assertIn("--max-speakers is not supported", err.getvalue())
+
+    def test_m4a_is_rejected_because_the_service_cannot_decode_it(self) -> None:
+        config = SimpleNamespace(
+            azure_endpoint=None,
+            azure_transcribe_style="display",
+            audio_format="m4a",
+            language="en",
+            diarize=True,
+            max_speakers=8,
+        )
+        with self.assertRaisesRegex(UsageError, "--audio-format m4a.*azure-mai-2"):
+            mai.build(config)
 
 
 if __name__ == "__main__":

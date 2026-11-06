@@ -24,6 +24,10 @@ if TYPE_CHECKING:
 
 MODEL_ID = "MAI-Transcribe-2"
 
+# Azure documents WAV, MP3 and FLAC for MAI-Transcribe, and the live service
+# answers m4a with HTTP 400 "Invalid or unsupported audio format".
+AUDIO_FORMATS = ("mp3", "wav", "flac")
+
 # Complete language list from Azure's MAI-Transcribe documentation. Serbian and
 # Croatian are not supported; silently dropping their hints changes the output.
 # https://learn.microsoft.com/azure/ai-services/speech-service/mai-transcribe
@@ -242,6 +246,11 @@ def _missing_timing() -> UserFacingError:
 def build(config: RunConfig) -> AzureMai2Provider:
     from ..config import DEFAULT_MAX_SPEAKERS
 
+    if config.audio_format not in AUDIO_FORMATS:
+        raise UsageError(
+            f"--audio-format {config.audio_format} is not supported by azure-mai-2. "
+            "Use --audio-format mp3, its default."
+        )
     if config.diarize and config.max_speakers != DEFAULT_MAX_SPEAKERS:
         print(
             "warning: --max-speakers is not supported by azure-mai-2; "

@@ -250,6 +250,23 @@ class Mai2TranscriptionTest(unittest.TestCase):
             extract.assert_not_called()
             post.assert_not_called()
 
+    def test_m4a_exits_two_before_extracting_or_uploading(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            video = Path(folder) / "video.mp4"
+            video.touch()
+            with (
+                mock.patch("subtitler.pipeline.ensure_tool"),
+                mock.patch("subtitler.pipeline.extract_audio") as extract,
+                mock.patch("subtitler.providers._azure_speech.post_transcribe") as post,
+            ):
+                code, _, err = run(
+                    str(video), "--provider", "azure-mai-2", "--audio-format", "m4a"
+                )
+            self.assertEqual(code, 2)
+            self.assertIn("--audio-format m4a is not supported by azure-mai-2", err)
+            extract.assert_not_called()
+            post.assert_not_called()
+
 
 class UpdateCommandTest(unittest.TestCase):
     def test_update_and_upgrade_run_the_update(self) -> None:
