@@ -304,7 +304,8 @@ def build_parser(color: bool = True) -> ArgumentParser:
         "--azure-transcribe-style",
         choices=("display", "verbatim"),
         default="display",
-        help="Transcript style for azure-hybrid's MAI pass. Default: display.",
+        help="Transcript style for azure-mai-2 or azure-hybrid's MAI pass. "
+        "Default: display (MAI-2 clean output).",
     )
     parser.add_argument(
         "--audio-format",
@@ -333,7 +334,7 @@ def build_parser(color: bool = True) -> ArgumentParser:
         default=None,
         help=(
             "Identify who is speaking and start a new subtitle at each change of speaker. "
-            "On by default for providers that support it (azure-fast, azure-hybrid); "
+            "On by default for providers that support it; "
             "pass --no-diarize to turn it off."
         ),
     )
@@ -341,7 +342,8 @@ def build_parser(color: bool = True) -> ArgumentParser:
         "--max-speakers",
         type=int,
         default=DEFAULT_MAX_SPEAKERS,
-        help=f"Upper bound on distinct speakers when diarizing (2-35). Default: {DEFAULT_MAX_SPEAKERS}.",
+        help=f"Upper bound on distinct speakers when diarizing (2-35). "
+        f"Default: {DEFAULT_MAX_SPEAKERS}. Not supported by azure-mai-2.",
     )
     parser.add_argument(
         "--tag-audio-events",

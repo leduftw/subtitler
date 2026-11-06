@@ -1,6 +1,6 @@
 """Shared low-level client and response parsing for Azure Speech transcription.
 
-Both the MAI provider and the hybrid provider hit the same
+The Azure providers hit the same
 ``/speechtotext/transcriptions:transcribe`` endpoint; only the ``definition``
 JSON differs (MAI uses ``enhancedMode``; plain fast transcription does not).
 This module owns the HTTP call and the JSON-to-cues parsing so those providers

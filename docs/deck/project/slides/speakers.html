@@ -22,7 +22,7 @@
 </div>
 <div style="display:flex;gap:32px">
 <p style="flex:1;font-size:28px;line-height:1.4;color:#4A5363;border-top:2px solid #1B2230;padding:20px 0 0 0">render_srt marks each new turn with “- ” only when the file holds two or more speakers, so a single voice renders clean.</p>
-<p style="flex:1;font-size:28px;line-height:1.4;color:#4A5363;border-top:2px solid #1B2230;padding:20px 0 0 0">On by default for scribe, azure-fast and azure-hybrid. --no-diarize turns it off, and --max-speakers sets the ceiling, 8 by default.</p>
+<p style="flex:1;font-size:28px;line-height:1.4;color:#4A5363;border-top:2px solid #1B2230;padding:20px 0 0 0">Every selectable provider diarizes by default. --no-diarize disables it. --max-speakers defaults to 8 for the others. azure-mai-2 detects its own count.</p>
 </div>
 </div>
 <p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#5B6270">src/subtitler/srt.py · render_srt() · src/subtitler/config.py · resolve_diarize() · README.md</p>
